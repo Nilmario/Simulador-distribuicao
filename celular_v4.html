@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decisões - Simulador</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+  *{box-sizing:border-box;}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#eef2f5;margin:0;padding:14px;color:#263238;}
+  h1{text-align:center;color:#1a3c5e;font-size:20px;margin:6px 0;}
+  .dia{text-align:center;font-size:16px;font-weight:bold;color:#102a43;margin-bottom:10px;}
+  .card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px;}
+  .card h2{font-size:15px;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid #e0e6ea;}
+  .forn h2{color:#2e7d4f;border-color:#2e7d4f;}
+  .dist h2{color:#1a3c5e;border-color:#1a3c5e;}
+  label{font-size:13px;font-weight:bold;display:block;margin:10px 0 4px;}
+  input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;font-size:15px;}
+  .info{background:#f5f8fa;border-radius:8px;padding:8px 10px;font-size:12px;color:#546e7a;margin-top:8px;}
+  .info b{color:#102a43;}
+  button{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:bold;color:#fff;cursor:pointer;margin-top:6px;}
+  button:disabled{background:#999 !important;cursor:not-allowed;}
+  .enviar{background:#2e7d4f;}
+  .enviado{background:#1a3c5e;}
+  .selEquipe{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center;}
+  .selEquipe button{margin-top:10px;}
+  .lojaRow{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;}
+  .estoqueInfo{display:flex;justify-content:space-around;background:#1a3c5e;color:#fff;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;text-align:center;}
+  .estoqueInfo b{display:block;font-size:18px;}
+  #status{text-align:center;font-size:13px;color:#2e7d4f;font-weight:bold;margin-top:8px;}
+  .aviso{text-align:center;background:#fff3cd;color:#856404;border-radius:8px;padding:10px;font-size:13px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+<h1>📦 Painel da Equipe</h1>
+
+<div id="telaSelecao" class="selEquipe">
+  <h2>Escolha sua equipe</h2>
+  <div id="avisoEspera" class="aviso" style="display:none">⏳ Aguardando o professor iniciar a partida...</div>
+  <button class="enviar" onclick="selecionar('A')">🟢 Equipe A</button>
+  <button style="background:#1a3c5e" onclick="selecionar('B')">🔵 Equipe B</button>
+  <button style="background:#8e44ad" onclick="selecionar('C')">🟣 Equipe C</button>
+  <button style="background:#d35400" onclick="selecionar('D')">🟠 Equipe D</button>
+</div>
+
+<div id="telaEspera" class="selEquipe" style="display:none">
+  <h2 id="esperaLbl">✅ Equipe selecionada</h2>
+  <div class="aviso">⏳ Aguardando o professor iniciar a partida...</div>
+  <button class="enviado" style="background:#c0392b" onclick="trocarEquipe()">🔄 Trocar de equipe</button>
+</div>
+
+<div id="telaJogo" style="display:none">
+  <div class="dia">EQUIPE <span id="minhaEquipeLbl"></span> · DIA <span id="diaAtual">0</span> / <span id="totalDias">30</span></div>
+
+  <div class="estoqueInfo">
+    <div><b id="estCD">0</b>Estoque CD</div>
+    <div><b id="estTransitoCD">0</b>Forn→CD</div>
+    <div><b id="estTransitoLoja">0</b>CD→Lojas</div>
+    <div><b id="nivelServ">100%</b>Nível serviço</div>
+  </div>
+
+  <div class="card forn">
+    <h2>🏭 Comprar do Fornecedor → CD</h2>
+    <label>Quantidade a pedir</label>
+    <input type="number" id="pedido" min="0" value="0">
+    <label>Tipo de frete (Fornecedor → CD)</label>
+    <select id="seletorFreteForn">
+      <option value="economico">🐢 Econômico</option>
+      <option value="rapido">⚡ Rápido</option>
+    </select>
+    <div class="info" id="infoForn"></div>
+  </div>
+
+  <div class="card dist">
+    <h2>🏬 Distribuir CD → Lojas</h2>
+    <div class="lojaRow"><span>🏪 Loja 1</span><input type="number" id="r1" min="0" value="0"></div>
+    <div class="lojaRow"><span>🏪 Loja 2</span><input type="number" id="r2" min="0" value="0"></div>
+    <div class="lojaRow"><span>🏪 Loja 3</span><input type="number" id="r3" min="0" value="0"></div>
+    <label>Tipo de frete (CD → Loja)</label>
+    <select id="seletorFreteLoja">
+      <option value="economico">🐢 Econômico</option>
+      <option value="rapido">⚡ Rápido</option>
+    </select>
+    <div class="info" id="infoLoja"></div>
+  </div>
+
+  <button id="btnEnviar" class="enviar" onclick="enviarDecisao()">✅ ENVIAR DECISÃO</button>
+  <div id="status"></div>
+  <button class="enviado" style="background:#c0392b" onclick="trocarEquipe()">🔄 Trocar de equipe</button>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA_U9JAwdjIBG-GQAPWTlQ99B7ZYpSW01w",
+  authDomain: "simulador-distribuicao.firebaseapp.com",
+  databaseURL: "https://simulador-distribuicao-default-rtdb.firebaseio.com",
+  projectId: "simulador-distribuicao",
+  storageBucket: "simulador-distribuicao.appspot.com",
+  messagingSenderId: "COLE_AQUI_SEU_SENDER_ID",
+  appId: "COLE_AQUI_SEU_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const NUM_LOJAS = 3;
+const $ = id => document.getElementById(id);
+let minhaEquipe = null;
+let diaAtual = 0;
+let jogoIniciado = false;
+let jogoEncerrado = false;
+let CFG = {};
+let partidaIdAtual = localStorage.getItem("partidaId") || null;
+
+window.onload = () => {
+  db.ref("jogo/estado").on("value", s=>{
+    const st = s.val()||{};
+    diaAtual = st.dia||0;
+    jogoIniciado = st.iniciado||false;
+    const novaPartida = st.partidaId || null;
+
+    if(minhaEquipe && novaPartida && novaPartida !== partidaIdAtual){
+      partidaIdAtual = novaPartida;
+      localStorage.setItem("partidaId", novaPartida);
+      voltarParaSelecao();
+      return;
+    }
+    partidaIdAtual = novaPartida;
+    localStorage.setItem("partidaId", novaPartida);
+
+    atualizarTela();
+  });
+
+  const salva = localStorage.getItem("minhaEquipe");
+  if(salva){
+    db.ref("jogo/estado").once("value").then(s=>{
+      const st = s.val()||{};
+      jogoIniciado = st.iniciado||false;
+      diaAtual = st.dia||0;
+      selecionar(salva);
+    });
+  }
+};
+
+function atualizarTela(){
+  if(!minhaEquipe){
+    $("telaSelecao").style.display = "block";
+    $("telaEspera").style.display = "none";
+    $("telaJogo").style.display = "none";
+    $("avisoEspera").style.display = jogoIniciado ? "none" : "block";
+    return;
+  }
+
+  if(!jogoIniciado){
+    $("telaSelecao").style.display = "none";
+    $("telaEspera").style.display = "block";
+    $("telaJogo").style.display = "none";
+    $("esperaLbl").textContent = "✅ Equipe " + minhaEquipe + " selecionada";
+    return;
+  }
+
+  $("telaSelecao").style.display = "none";
+  $("telaEspera").style.display = "none";
+  $("telaJogo").style.display = "block";
+  $("minhaEquipeLbl").textContent = minhaEquipe;
+  $("diaAtual").textContent = diaAtual;
+
+  jogoEncerrado = diaAtual >= (CFG.totalDias || 30);
+  if(jogoEncerrado){
+    $("btnEnviar").disabled = true;
+    $("btnEnviar").className = "enviar";
+    $("btnEnviar").textContent = "🏁 PARTIDA ENCERRADA";
+    $("status").textContent = "O jogo terminou. Aguarde o professor.";
+  } else {
+    $("btnEnviar").disabled = false;
+    verificarEnvio();
+  }
+}
+
+/* ====== SELEÇÃO DE EQUIPE ====== */
+function selecionar(eq){
+  minhaEquipe = eq;
+  localStorage.setItem("minhaEquipe", eq);
+  db.ref("equipes/"+eq+"/ativa").set(true);
+  iniciarListeners();
+  atualizarTela();
+}
+
+function voltarParaSelecao(){
+  if(minhaEquipe){
+    db.ref("equipes/"+minhaEquipe+"/ativa").set(false);
+    db.ref("jogo/config").off();
+    db.ref("equipes/"+minhaEquipe).off();
+  }
+  minhaEquipe = null;
+  jogoEncerrado = false;
+  localStorage.removeItem("minhaEquipe");
+  $("status").textContent = "";
+  atualizarTela();
+}
+
+function trocarEquipe(){
+  if(confirm("Deseja sair e escolher outra equipe?")) voltarParaSelecao();
+}
+
+/* ====== LISTENERS DA EQUIPE ====== */
+function iniciarListeners(){
+  db.ref("jogo/config").on("value", s=>{
+    CFG = s.val()||{};
+    $("totalDias").textContent = CFG.totalDias||30;
+    atualizarInfoFrete();
+    atualizarTela();
+  });
+
+  db.ref("equipes/"+minhaEquipe).on("value", s=>{
+    const e = s.val()||{};
+    $("estCD").textContent = e.estoqueCD||0;
+    $("estTransitoCD").textContent   = (e.emTransitoCD   != null) ? e.emTransitoCD   : (e.emTransito||0);
+    $("estTransitoLoja").textContent = (e.emTransitoLoja != null) ? e.emTransitoLoja : 0;
+    $("nivelServ").textContent = (e.nivelServico||100)+"%";
+  });
+
+  $("seletorFreteForn").onchange = atualizarInfoFrete;
+  $("seletorFreteLoja").onchange = atualizarInfoFrete;
+}
+
+function atualizarInfoFrete(){
+  if(!CFG.forn_leadRapido) return;
+  const rapF = $("seletorFreteForn").value==="rapido";
+  $("infoForn").innerHTML = `Lead time: <b>${rapF?CFG.forn_leadRapido:CFG.forn_leadEconomico} dias</b> · 
+    Custo compra: <b>R$ ${CFG.custoCompra}/un</b>`;
+  const rapL = $("seletorFreteLoja").value==="rapido";
+  $("infoLoja").innerHTML = `Lead time: <b>${rapL?CFG.loja_leadRapido:CFG.loja_leadEconomico} dias</b>`;
+}
+
+/* ====== VERIFICAR SE JÁ ENVIOU ====== */
+function verificarEnvio(){
+  if(!minhaEquipe || jogoEncerrado) return;
+  db.ref("decisoes/dia"+diaAtual+"/"+minhaEquipe).once("value").then(s=>{
+    const btn = $("btnEnviar");
+    if(s.exists()){
+      btn.textContent = "✔️ DECISÃO ENVIADA (pode reenviar)";
+      btn.className = "enviado";
+      $("status").textContent = "Aguardando o professor avançar o dia...";
+    } else {
+      btn.textContent = "✅ ENVIAR DECISÃO";
+      btn.className = "enviar";
+      $("status").textContent = "";
+    }
+    atualizarInfoFrete();
+  });
+}
+
+/* ====== ENVIAR DECISÃO ====== */
+function enviarDecisao(){
+  if(!minhaEquipe || jogoEncerrado) return;
+  const decisao = {
+    pedidoFornecedor: Number($("pedido").value)||0,
+    modoForn: $("seletorFreteForn").value,
+    remessas: {
+      1: Number($("r1").value)||0,
+      2: Number($("r2").value)||0,
+      3: Number($("r3").value)||0
+    },
+    modoLoja: $("seletorFreteLoja").value
+  };
+  db.ref("decisoes/dia"+diaAtual+"/"+minhaEquipe).set(decisao).then(()=>{
+    $("status").textContent = "✅ Decisão enviada com sucesso!";
+
+    // 🧹 LIMPAR CAMPOS APÓS ENVIAR
+    $("pedido").value = 0;
+    $("r1").value = 0;
+    $("r2").value = 0;
+    $("r3").value = 0;
+    $("seletorFreteForn").value = "economico";
+    $("seletorFreteLoja").value = "economico";
+    atualizarInfoFrete();
+
+    verificarEnvio();
+  });
+}
+</script>
+</body>
+</html>
