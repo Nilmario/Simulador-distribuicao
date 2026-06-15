@@ -242,7 +242,7 @@ window.onload = () => {
   });
 
   new QRCode($("qrcode"), {
-  text: location.href.replace(/[^/]*$/, "celular.html"),
+  text: location.origin + location.pathname.replace(/[^/]*$/, "") + "celular.html",
   width: 90,
   height: 90
 });
