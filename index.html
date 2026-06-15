@@ -241,7 +241,11 @@ window.onload = () => {
     atualizarRanking();
   });
 
-  new QRCode($("qrcode"), {text: location.href.replace("monitor","celular"), width:90, height:90});
+  new QRCode($("qrcode"), {
+  text: location.href.replace(/[^/]*$/, "celular.html"),
+  width: 90,
+  height: 90
+});
 };
 
 /* ====== RENDER ====== */
