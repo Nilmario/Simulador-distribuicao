@@ -254,10 +254,15 @@ function render(snap){
   const grid = $("grid");
   grid.innerHTML = "";
 
-  const visiveis = EQUIPES.filter(id => equipes[id] && equipes[id].ativa);
+  // 🔑 CORREÇÃO: só mostra equipes no monitor SE o professor já iniciou o jogo
+  const visiveis = jogoIniciado
+    ? EQUIPES.filter(id => equipes[id] && equipes[id].ativa)
+    : [];
 
   if(visiveis.length === 0){
-    grid.innerHTML = `<div class="vazio">⏳ Aguardando equipes selecionarem no celular...</div>`;
+    grid.innerHTML = jogoIniciado
+      ? `<div class="vazio">⏳ Aguardando equipes selecionarem no celular...</div>`
+      : `<div class="vazio">📱 Alunos: leiam o QR Code e escolham a equipe.<br>👨‍🏫 Professor: clique em <b>INICIAR</b> para começar a partida.</div>`;
     return;
   }
 
@@ -350,6 +355,7 @@ function render(snap){
       </div>`;
   });
 }
+
 
 /* ====== RANKING FINAL ====== */
 function atualizarRanking(){
