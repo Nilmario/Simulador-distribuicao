@@ -109,7 +109,17 @@ let minhaEquipe = null;
 let diaAtual = 0;
 let jogoIniciado = false;
 let jogoEncerrado = false;
-let CFG = {};
+
+// 🔒 Fallback dos fretes/leads (caso o professor ainda não tenha salvo as opções)
+let CFG = {
+  custoCompra: 70,
+  forn_freteRapido: 5, forn_freteEconomico: 2,
+  forn_leadRapido: 12, forn_leadEconomico: 16,
+  loja_freteRapido: 3, loja_freteEconomico: 1,
+  loja_leadRapido: 4,  loja_leadEconomico: 6,
+  totalDias: 30
+};
+
 let partidaIdAtual = localStorage.getItem("partidaId") || null;
 
 window.onload = () => {
@@ -206,7 +216,8 @@ function trocarEquipe(){
 /* ====== LISTENERS DA EQUIPE ====== */
 function iniciarListeners(){
   db.ref("jogo/config").on("value", s=>{
-    CFG = s.val()||{};
+    // 🔧 mescla (não sobrescreve) para preservar os fretes padrão se não vierem do banco
+    CFG = {...CFG, ...(s.val()||{})};
     $("totalDias").textContent = CFG.totalDias||30;
     atualizarInfoFrete();
     atualizarTela();
@@ -224,14 +235,26 @@ function iniciarListeners(){
   $("seletorFreteLoja").onchange = atualizarInfoFrete;
 }
 
+/* ====== INFO DE FRETE (CORRIGIDO) ====== */
 function atualizarInfoFrete(){
   if(!CFG.forn_leadRapido) return;
-  const rapF = $("seletorFreteForn").value==="rapido";
-  $("infoForn").innerHTML = `Lead time: <b>${rapF?CFG.forn_leadRapido:CFG.forn_leadEconomico} dias</b> · 
-    Custo compra: <b>R$ ${CFG.custoCompra}/un</b>`;
-  const rapL = $("seletorFreteLoja").value==="rapido";
-  $("infoLoja").innerHTML = `Lead time: <b>${rapL?CFG.loja_leadRapido:CFG.loja_leadEconomico} dias</b> .
-    Custo compra: <b>R$ ${CFG.custoCompra}/un</b>`;
+
+  // ----- Fornecedor → CD -----
+  const rapF   = $("seletorFreteForn").value === "rapido";
+  const leadF  = rapF ? CFG.forn_leadRapido  : CFG.forn_leadEconomico;
+  const freteF = rapF ? CFG.forn_freteRapido : CFG.forn_freteEconomico;
+  $("infoForn").innerHTML =
+    `Lead time: <b>${leadF} dias</b> · ` +
+    `Custo compra: <b>R$ ${CFG.custoCompra}/un</b> · ` +
+    `Frete: <b>R$ ${freteF}/un</b>`;
+
+  // ----- CD → Loja -----
+  const rapL   = $("seletorFreteLoja").value === "rapido";
+  const leadL  = rapL ? CFG.loja_leadRapido  : CFG.loja_leadEconomico;
+  const freteL = rapL ? CFG.loja_freteRapido : CFG.loja_freteEconomico;
+  $("infoLoja").innerHTML =
+    `Lead time: <b>${leadL} dias</b> · ` +
+    `Frete: <b>R$ ${freteL}/un</b>`;
 }
 
 /* ====== VERIFICAR SE JÁ ENVIOU ====== */
