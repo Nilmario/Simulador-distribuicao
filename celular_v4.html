@@ -230,7 +230,8 @@ function atualizarInfoFrete(){
   $("infoForn").innerHTML = `Lead time: <b>${rapF?CFG.forn_leadRapido:CFG.forn_leadEconomico} dias</b> · 
     Custo compra: <b>R$ ${CFG.custoCompra}/un</b>`;
   const rapL = $("seletorFreteLoja").value==="rapido";
-  $("infoLoja").innerHTML = `Lead time: <b>${rapL?CFG.loja_leadRapido:CFG.loja_leadEconomico} dias</b>`;
+  $("infoLoja").innerHTML = `Lead time: <b>${rapL?CFG.loja_leadRapido:CFG.loja_leadEconomico} dias</b> .
+    Custo compra: <b>R$ ${CFG.custoCompra}/un</b>`;
 }
 
 /* ====== VERIFICAR SE JÁ ENVIOU ====== */
