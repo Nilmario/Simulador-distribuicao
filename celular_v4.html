@@ -245,7 +245,6 @@ function atualizarInfoFrete(){
   const freteF = rapF ? CFG.forn_freteRapido : CFG.forn_freteEconomico;
   $("infoForn").innerHTML =
     `Lead time: <b>${leadF} dias</b> · ` +
-    `Custo compra: <b>R$ ${CFG.custoCompra}/un</b> · ` +
     `Frete: <b>R$ ${freteF}/un</b>`;
 
   // ----- CD → Loja -----
