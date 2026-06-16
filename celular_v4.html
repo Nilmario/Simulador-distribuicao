@@ -30,13 +30,20 @@
   .estoqueInfo b{display:block;font-size:18px;}
   #status{text-align:center;font-size:13px;color:#2e7d4f;font-weight:bold;margin-top:8px;}
   .aviso{text-align:center;background:#fff3cd;color:#856404;border-radius:8px;padding:10px;font-size:13px;margin-bottom:12px;}
+  /* 🏆 animação do modal de fim */
+  @keyframes popFim{
+    from{transform:scale(.7);opacity:0;}
+    to{transform:scale(1);opacity:1;}
+  }
 </style>
 </head>
 <body>
 <h1>📦 Painel da Equipe</h1>
 
-<!-- 🏆 NOVO: banner de fim de jogo -->
-<div id="bannerFim" style="display:none;text-align:center;border-radius:14px;padding:24px 16px;margin-bottom:14px;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15);"></div>
+<!-- 🏆 NOVO: modal centralizado de fim de jogo -->
+<div id="overlayFim" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div id="bannerFim" style="text-align:center;border-radius:18px;padding:30px 22px;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:340px;width:100%;animation:popFim .3s ease;"></div>
+</div>
 
 <div id="telaSelecao" class="selEquipe">
   <h2>Escolha sua equipe</h2>
@@ -160,7 +167,7 @@ function atualizarTela(){
     $("telaSelecao").style.display = "block";
     $("telaEspera").style.display = "none";
     $("telaJogo").style.display = "none";
-    $("bannerFim").style.display = "none";   // 🏆 NOVO
+    $("overlayFim").style.display = "none";   // 🏆 NOVO
     $("avisoEspera").style.display = jogoIniciado ? "none" : "block";
     return;
   }
@@ -169,7 +176,7 @@ function atualizarTela(){
     $("telaSelecao").style.display = "none";
     $("telaEspera").style.display = "block";
     $("telaJogo").style.display = "none";
-    $("bannerFim").style.display = "none";   // 🏆 NOVO
+    $("overlayFim").style.display = "none";   // 🏆 NOVO
     $("esperaLbl").textContent = "✅ Equipe " + minhaEquipe + " selecionada";
     return;
   }
@@ -188,7 +195,7 @@ function atualizarTela(){
     $("status").textContent = "O jogo terminou. Aguarde o professor.";
     mostrarResultadoFinal();   // 🏆 NOVO
   } else {
-    $("bannerFim").style.display = "none";   // 🏆 NOVO
+    $("overlayFim").style.display = "none";   // 🏆 NOVO
     $("btnEnviar").disabled = false;
     verificarEnvio();
   }
@@ -310,7 +317,7 @@ function enviarDecisao(){
   });
 }
 
-/* ====== 🏆 RESULTADO FINAL ====== */
+/* ====== 🏆 RESULTADO FINAL (MODAL CENTRALIZADO) ====== */
 function mostrarResultadoFinal(){
   // Lê o lucro de todas as equipes e descobre a vencedora
   db.ref("equipes").once("value").then(s=>{
@@ -330,7 +337,7 @@ function mostrarResultadoFinal(){
     });
 
     const banner = $("bannerFim");
-    banner.style.display = "block";
+    $("overlayFim").style.display = "flex";   // 🏆 mostra centralizado
 
     const meuLucro = (equipes[minhaEquipe]?.lucro || 0).toFixed(0);
 
@@ -338,18 +345,18 @@ function mostrarResultadoFinal(){
       banner.style.background = "linear-gradient(135deg,#f9d423,#e6a817)";
       banner.style.color = "#5a3e00";
       banner.innerHTML = `
-        <div style="font-size:46px">🏆</div>
-        <div style="font-size:22px;font-weight:bold;margin-top:6px">PARABÉNS!</div>
-        <div style="font-size:16px;margin-top:4px">Sua equipe <b>${minhaEquipe}</b> VENCEU a partida!</div>
-        <div style="font-size:14px;margin-top:8px">Lucro final: <b>R$ ${meuLucro}</b></div>`;
+        <div style="font-size:50px">🏆</div>
+        <div style="font-size:24px;font-weight:bold;margin-top:8px">PARABÉNS!</div>
+        <div style="font-size:16px;margin-top:6px">Sua equipe <b>${minhaEquipe}</b> VENCEU a partida!</div>
+        <div style="font-size:14px;margin-top:10px">Lucro final: <b>R$ ${meuLucro}</b></div>`;
     } else {
       banner.style.background = "linear-gradient(135deg,#37474f,#263238)";
       banner.style.color = "#fff";
       banner.innerHTML = `
-        <div style="font-size:40px">🏁</div>
-        <div style="font-size:18px;font-weight:bold;margin-top:6px">Partida encerrada</div>
-        <div style="font-size:15px;margin-top:6px">🏆 Equipe vencedora: <b>${vencedora || "—"}</b></div>
-        <div style="font-size:14px;margin-top:8px">Sua equipe <b>${minhaEquipe}</b> · Lucro: <b>R$ ${meuLucro}</b></div>`;
+        <div style="font-size:44px">🏁</div>
+        <div style="font-size:20px;font-weight:bold;margin-top:8px">Partida encerrada</div>
+        <div style="font-size:15px;margin-top:8px">🏆 Equipe vencedora: <b>${vencedora || "—"}</b></div>
+        <div style="font-size:14px;margin-top:10px">Sua equipe <b>${minhaEquipe}</b> · Lucro: <b>R$ ${meuLucro}</b></div>`;
     }
   });
 }
