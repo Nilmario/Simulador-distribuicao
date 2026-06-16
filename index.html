@@ -488,8 +488,36 @@ async function avancarDia(){
 
   const novoDia = diaAtual+1;
   await db.ref("jogo/estado").update({dia:novoDia});
-  if(novoDia>=CFG.totalDias) alert("🏁 Jogo encerrado no dia "+novoDia+"!");
+
+  // ===================================================================
+  // 🏁 ENCERRAMENTO DO JOGO + LIMPEZA AUTOMÁTICA (com confirmação)
+  // ===================================================================
+  if(novoDia >= CFG.totalDias){
+    alert("🏁 Jogo encerrado no dia " + novoDia + "!\n\nO RANKING FINAL já está na tela. 🏆");
+
+    // pequena pausa pra garantir que o ranking renderizou antes do confirm
+    setTimeout(async () => {
+      const limpar = confirm(
+        "🧹 LIMPAR todos os dados agora?\n\n" +
+        "⚠️ O ranking será apagado e os celulares dos alunos\n" +
+        "voltarão para a tela de seleção de equipe.\n\n" +
+        "👉 OK = limpar | Cancelar = manter ranking na tela"
+      );
+
+      if(limpar){
+        await db.ref("decisoes").remove();
+        await db.ref("equipes").remove();
+        await db.ref("jogo/estado").set({
+          dia: 0,
+          iniciado: false,
+          partidaId: Date.now()   // 🔑 desconecta os celulares automaticamente
+        });
+        alert("✅ Dados limpos! Pronto para uma nova partida.");
+      }
+    }, 800); // 0,8s pra ver o ranking aparecer
+  }
 }
+
 
 function resetar(){
   if(!confirm("Reiniciar todo o jogo? Isso apaga todos os dados.")) return;
