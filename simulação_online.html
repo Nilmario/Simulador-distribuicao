@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Cadeia de Suprimentos</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:linear-gradient(135deg,#1a3c5e,#0f2a44);color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .container{max-width:720px;width:100%;text-align:center;}
+  .logo{font-size:60px;margin-bottom:8px;}
+  h1{font-size:28px;margin-bottom:6px;}
+  .sub{color:#9fb6cc;font-size:15px;margin-bottom:34px;}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:560px){.cards{grid-template-columns:1fr;}}
+  .card{background:#fff;color:#263238;border-radius:18px;padding:26px 22px;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.3);transition:transform .2s,box-shadow .2s;display:block;}
+  .card:hover{transform:translateY(-5px);box-shadow:0 14px 32px rgba(0,0,0,.4);}
+  .card .ic{font-size:48px;margin-bottom:10px;}
+  .card h2{font-size:20px;margin-bottom:6px;}
+  .card.prof h2{color:#1a3c5e;}
+  .card.aluno h2{color:#2e7d4f;}
+  .card p{font-size:13px;color:#607d8b;line-height:1.4;}
+  .card .btn{display:inline-block;margin-top:14px;padding:10px 22px;border-radius:10px;color:#fff;font-weight:bold;font-size:14px;}
+  .card.prof .btn{background:#1a3c5e;}
+  .card.aluno .btn{background:#2e7d4f;}
+  .qrwrap{margin-top:32px;background:rgba(255,255,255,.08);border-radius:16px;padding:22px;display:inline-block;}
+  .qrwrap h3{font-size:15px;margin-bottom:14px;color:#cfe0ee;}
+  #qrcode{display:inline-block;background:#fff;padding:12px;border-radius:12px;}
+  .qrwrap p{margin-top:12px;font-size:12px;color:#9fb6cc;}
+  .rodape{margin-top:30px;font-size:12px;color:#7a93a8;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">📦</div>
+  <h1>Simulador de Cadeia de Suprimentos</h1>
+  <p class="sub">Jogo de gestão de estoque, distribuição e logística</p>
+
+  <div class="cards">
+    <!-- ⚠️ Ajuste os nomes dos arquivos conforme os seus -->
+    <a class="card prof" href="index.html">
+      <div class="ic">👨‍🏫</div>
+      <h2>Monitor do Professor</h2>
+      <p>Inicie a partida, configure as variáveis, avance os dias e acompanhe o ranking.</p>
+      <span class="btn">Abrir Monitor ▶️</span>
+    </a>
+
+    <a class="card aluno" href="celular_v4.html">
+      <div class="ic">📱</div>
+      <h2>App do Aluno</h2>
+      <p>Escolha sua equipe e tome as decisões de compra e distribuição a cada dia.</p>
+      <span class="btn">Entrar no Jogo 🎮</span>
+    </a>
+  </div>
+
+  <div class="qrwrap">
+    <h3>📲 Alunos: escaneiem para entrar no jogo</h3>
+    <div id="qrcode"></div>
+    <p>Aponte a câmera do celular para o QR Code</p>
+  </div>
+
+  <p class="rodape">Simulador educacional · Logística e Cadeia de Suprimentos</p>
+</div>
+
+<script>
+  // Gera o QR Code apontando para o app do aluno
+  var urlAluno = location.origin + location.pathname.replace(/[^/]*$/, "") + "celular_v4.html";
+  new QRCode(document.getElementById("qrcode"), {
+    text: urlAluno,
+    width: 150,
+    height: 150
+  });
+</script>
+</body>
+</html>
