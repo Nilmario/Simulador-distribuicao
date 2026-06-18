@@ -23,55 +23,56 @@
 
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:1500px;margin:0 auto;}
   .equipe{background:#fff;border-radius:14px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;}
-  .eqHead{text-align:center;font-weight:bold;color:#fff;padding:8px;border-radius:8px;margin-bottom:8px;font-size:15px;}
+  .eqHead{text-align:center;font-weight:bold;color:#fff;padding:8px;border-radius:8px;margin-bottom:8px;font-size:16px;}
 
   .fluxo{display:flex;align-items:center;gap:8px;}
   .col{text-align:center;}
   .box{background:#fff;border:2px solid #e0e6ea;border-radius:10px;overflow:hidden;min-width:90px;}
-  .titSec{font-size:12px;font-weight:bold;color:#fff;padding:6px;}
+  .titSec{font-size:13px;font-weight:bold;color:#fff;padding:6px;}
   .fornecedor .titSec{background:#2e7d4f;}
   .cd .titSec{background:#1a3c5e;}
   .icon{font-size:38px;margin:6px 0;}
   .estoqueCD{font-size:26px;font-weight:bold;color:#1a3c5e;}
-  .estoqueCD small{display:block;font-size:11px;color:#789;font-weight:normal;}
+  .estoqueCD small{display:block;font-size:12px;color:#789;font-weight:normal;}
 
   /* ===== ESTRADA Forn→CD ===== */
   .estradaWrap{flex:1;min-width:90px;}
   .estrada{position:relative;height:26px;background:#37474f;border-radius:5px;
     background-image:repeating-linear-gradient(90deg,transparent 0 16px,#ffca28 16px 30px);
     background-size:30px 4px;background-repeat:repeat-x;background-position:center;}
-  .estrada small{display:block;text-align:center;font-size:10px;color:#546e7a;margin-top:3px;}
+  .estrada small{display:block;text-align:center;font-size:11px;color:#546e7a;margin-top:3px;}
   /* caminhão posicionado por JS (left %), virado para a DIREITA */
   .caminhao{position:absolute;top:-8px;font-size:22px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estrada.parada .caminhao{opacity:.25;}
 
-  /* ===== ESTRADA CD→Loja ===== */
-  .estradaLoja{position:relative;height:18px;background:#37474f;border-radius:4px;flex:1;min-width:50px;
-    background-image:repeating-linear-gradient(90deg,transparent 0 10px,#ffca28 10px 18px);
-    background-size:18px 3px;background-repeat:repeat-x;background-position:center;}
-  .estradaLoja .caminhao{position:absolute;top:-6px;font-size:15px;
+  /* ===== ESTRADA CD→Loja (MAIS VISÍVEL) ===== */
+  .estradaLoja{position:relative;height:22px;background:#37474f;border-radius:6px;flex:1;min-width:70px;
+    background-image:repeating-linear-gradient(90deg,transparent 0 12px,#ffca28 12px 24px);
+    background-size:24px 4px;background-repeat:repeat-x;background-position:center;
+    border:1px solid #263238;}
+  .estradaLoja .caminhao{position:absolute;top:-7px;font-size:18px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estradaLoja.parada .caminhao{opacity:.25;}
   /* coluna da estrada da loja + legenda embaixo */
-  .lojaEstradaCol{display:flex;flex-direction:column;align-items:stretch;min-width:55px;}
-  .transLojaLabel{text-align:center;font-size:9px;color:#1a3c5e;margin-top:2px;white-space:nowrap;font-weight:bold;}
+  .lojaEstradaCol{display:flex;flex-direction:column;align-items:stretch;min-width:75px;}
+  .transLojaLabel{text-align:center;font-size:11px;color:#1a3c5e;margin-top:3px;white-space:nowrap;font-weight:bold;}
 
   .lojas{display:flex;flex-direction:column;gap:5px;}
-  .loja{display:flex;align-items:center;gap:5px;font-size:12px;background:#f5f8fa;padding:4px 6px;border-radius:6px;}
-  .casa{font-size:18px;}
+  .loja{display:flex;align-items:center;gap:5px;font-size:13px;background:#f5f8fa;padding:5px 6px;border-radius:6px;}
+  .casa{font-size:20px;}
   .lojaInfo{flex:1;}
   .lojaInfo b{color:#102a43;}
   .lojaInfo span{color:#789;}
   .falta{color:#c0392b !important;font-weight:bold;}
 
-  .resumo{font-size:12px;margin-top:8px;border-top:1px solid #eee;padding-top:6px;}
+  .resumo{font-size:13px;margin-top:8px;border-top:1px solid #eee;padding-top:6px;}
   .resumo div{display:flex;justify-content:space-between;padding:2px 6px;}
   .rec{color:#2e7d4f;font-weight:bold;}
   .cst{color:#c0392b;font-weight:bold;}
-  .lucro{border-top:1px solid #ddd;margin-top:3px;padding-top:4px;font-weight:bold;font-size:15px;}
-  .nivel{text-align:center;font-size:12px;color:#546e7a;margin-top:4px;}
-  .vazio{text-align:center;color:#789;padding:40px;font-size:15px;grid-column:1/-1;}
+  .lucro{border-top:1px solid #ddd;margin-top:3px;padding-top:4px;font-weight:bold;font-size:16px;}
+  .nivel{text-align:center;font-size:13px;color:#546e7a;margin-top:4px;}
+  .vazio{text-align:center;color:#789;padding:40px;font-size:16px;grid-column:1/-1;}
 
   .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;}
   .modal{background:#fff;border-radius:14px;padding:22px;width:92%;max-width:520px;max-height:90vh;overflow:auto;}
@@ -82,11 +83,39 @@
   .row input{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;}
   .modalBtns{display:flex;gap:10px;margin-top:18px;}
 
-  .rankBox{display:none;max-width:600px;margin:0 auto 16px;background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .rankBox h2{text-align:center;color:#1a3c5e;margin:0 0 12px;}
-  .rankItem{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:8px;font-size:16px;font-weight:bold;color:#fff;}
+  /* ===== RANKING + PÓDIO F1 ===== */
+  .rankBox{display:none;max-width:760px;margin:0 auto 20px;background:linear-gradient(160deg,#0f1f33,#1a3c5e);
+    border-radius:18px;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,.35);color:#fff;}
+  .rankBox h2{text-align:center;color:#f9d423;margin:0 0 6px;font-size:30px;letter-spacing:1px;
+    text-shadow:0 2px 6px rgba(0,0,0,.5);}
+  .rankBox .sub{text-align:center;color:#aebfd0;font-size:14px;margin-bottom:20px;}
 
-  #qrBox{position:fixed;bottom:12px;right:12px;background:#fff;padding:10px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.15);text-align:center;font-size:11px;}
+  /* Pódio */
+  .podio{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:30px 0 24px;min-height:240px;}
+  .degrau{display:flex;flex-direction:column;align-items:center;width:150px;animation:subir .7s ease;}
+  @keyframes subir{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .degrau .medalha{font-size:42px;margin-bottom:4px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));}
+  .degrau .nomeEq{font-weight:bold;font-size:17px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+  .degrau .lucroEq{font-size:14px;font-weight:bold;margin-bottom:8px;}
+  .degrau .nivelEq{font-size:11px;color:#cfd8dc;margin-bottom:8px;}
+  .bloco{width:100%;border-radius:10px 10px 0 0;display:flex;align-items:flex-start;justify-content:center;
+    padding-top:10px;font-size:38px;font-weight:900;color:rgba(255,255,255,.85);
+    box-shadow:inset 0 4px 10px rgba(255,255,255,.2),0 6px 14px rgba(0,0,0,.4);}
+  .bloco.ouro  {height:170px;background:linear-gradient(180deg,#f9d423,#d4a017);}
+  .bloco.prata {height:130px;background:linear-gradient(180deg,#e0e0e0,#9e9e9e);}
+  .bloco.bronze{height:100px;background:linear-gradient(180deg,#e3a06a,#b06b3c);}
+  .bloco.quarto{height:75px;background:linear-gradient(180deg,#5a6e80,#3a4a58);}
+
+  /* lista extra (4º lugar em diante) */
+  .rankItem{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-radius:10px;
+    margin-bottom:8px;font-size:16px;font-weight:bold;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.25);}
+
+  #qrToggle{position:fixed;bottom:16px;right:16px;z-index:1000;background:#1a3c5e;color:#fff;border:none;
+    padding:10px 16px;border-radius:12px;font-weight:bold;cursor:pointer;font-size:14px;
+    box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  #qrBox{display:none;position:fixed;bottom:62px;right:16px;background:#fff;padding:12px;border-radius:12px;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);text-align:center;font-size:12px;color:#555;z-index:999;}
+  #qrBox.open{display:block;}
 
   /* ❓ MODAL DE INSTRUÇÕES (COMO JOGAR) */
   #overlayAjuda{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9500;align-items:center;justify-content:center;padding:16px;}
@@ -123,12 +152,16 @@
 </div>
 
 <div id="rankBox" class="rankBox">
-  <h2>🏆 RANKING FINAL</h2>
+  <h2>🏆 PÓDIO FINAL</h2>
+  <div class="sub">Resultado da temporada da cadeia de suprimentos</div>
+  <div id="podio" class="podio"></div>
   <div id="rankLista"></div>
 </div>
 
 <div id="grid" class="grid"></div>
 
+<!-- QR Code recolhível -->
+<button id="qrToggle" onclick="toggleQR()">📲 QR Code</button>
 <div id="qrBox"><div id="qrcode"></div><div>📱 Acesse pelo celular</div></div>
 
 <div class="overlay" id="overlay">
@@ -183,7 +216,7 @@
       <li><b>▶️ Iniciar (Dia 0):</b> zera as equipes e libera a entrada dos alunos.</li>
       <li>Confira no monitor se <b>todas as equipes apareceram</b> (A, B, C, D).</li>
       <li><b>⏭️ Avançar Dia:</b> só clique quando todas as equipes enviarem a decisão.</li>
-      <li>No último dia, o <b>🏆 Ranking Final</b> aparece automaticamente.</li>
+      <li>No último dia, o <b>🏆 Pódio Final</b> aparece automaticamente.</li>
       <li><b>🔄 Reiniciar:</b> apaga tudo e desconecta os celulares para uma nova partida.</li>
     </ul>
 
@@ -321,8 +354,8 @@ window.onload = () => {
 
   new QRCode($("qrcode"), {
   text: location.origin + location.pathname.replace(/[^/]*$/, "") + "celular_v4.html",
-  width: 90,
-  height: 90
+  width: 110,
+  height: 110
 });
 };
 
@@ -430,22 +463,47 @@ function render(snap){
 }
 
 
-/* ====== RANKING FINAL ====== */
+/* ====== RANKING FINAL + PÓDIO F1 ====== */
 function atualizarRanking(){
   const box = $("rankBox");
   if(!jogoIniciado || diaAtual < CFG.totalDias){ box.style.display="none"; return; }
+
   const lista = EQUIPES
     .filter(id=>ultimasEquipes[id] && ultimasEquipes[id].ativa)
     .map(id=>({id, lucro: ultimasEquipes[id].lucro||0, nivel: ultimasEquipes[id].nivelServico||0}))
     .sort((a,b)=>b.lucro-a.lucro);
+
+  // ===== Monta o pódio (top 3) na ordem visual: 2º · 1º · 3º =====
+  const podio = $("podio");
+  podio.innerHTML = "";
+
+  const ordemVisual = [1, 0, 2]; // posições (índices) na ordem dos degraus
+  const classeBloco = {0:"ouro", 1:"prata", 2:"bronze"};
+
+  ordemVisual.forEach(idx=>{
+    const eq = lista[idx];
+    if(!eq) return;
+    podio.innerHTML += `
+      <div class="degrau">
+        <div class="medalha">${MEDALHAS[idx]}</div>
+        <div class="nomeEq" style="color:${CORES[eq.id]==='#1a3c5e'?'#7fb3ff':CORES[eq.id]}">Equipe ${eq.id}</div>
+        <div class="lucroEq" style="color:#f9d423">R$ ${eq.lucro.toFixed(0)}</div>
+        <div class="nivelEq">Nível: ${eq.nivel}%</div>
+        <div class="bloco ${classeBloco[idx]}">${idx+1}º</div>
+      </div>`;
+  });
+
+  // ===== Lista do 4º lugar em diante =====
   let html = "";
-  lista.forEach((eq,i)=>{
+  lista.slice(3).forEach((eq,i)=>{
+    const pos = i + 4;
     html += `<div class="rankItem" style="background:${CORES[eq.id]}">
-      <span>${MEDALHAS[i]} Equipe ${eq.id}</span>
+      <span>${pos}º Equipe ${eq.id}</span>
       <span>R$ ${eq.lucro.toFixed(0)} · ${eq.nivel}%</span>
     </div>`;
   });
   $("rankLista").innerHTML = html;
+
   box.style.display = "block";
 }
 
@@ -572,7 +630,7 @@ async function avancarDia(){
   // 🏁 ENCERRAMENTO DO JOGO + LIMPEZA AUTOMÁTICA (com confirmação)
   // ===================================================================
   if(novoDia >= CFG.totalDias){
-    alert("🏁 Jogo encerrado no dia " + novoDia + "!\n\nO RANKING FINAL já está na tela. 🏆");
+    alert("🏁 Jogo encerrado no dia " + novoDia + "!\n\nO PÓDIO FINAL já está na tela. 🏆");
 
     setTimeout(async () => {
       const limpar = confirm(
@@ -638,6 +696,9 @@ function fecharOpcoes(){ $("overlay").style.display="none"; }
 /* ====== ❓ MODAL DE INSTRUÇÕES (COMO JOGAR) ====== */
 function abrirAjuda(){ $("overlayAjuda").style.display="flex"; }
 function fecharAjuda(){ $("overlayAjuda").style.display="none"; }
+
+/* ====== 📲 QR CODE RECOLHÍVEL ====== */
+function toggleQR(){ $("qrBox").classList.toggle("open"); }
 </script>
 </body>
 </html>
