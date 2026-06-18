@@ -38,7 +38,6 @@
   <p class="sub">Jogo de gestão de estoque, distribuição e logística</p>
 
   <div class="cards">
-    <!-- ⚠️ Ajuste os nomes dos arquivos conforme os seus -->
     <a class="card prof" href="monitor.html">
       <div class="ic">👨‍🏫</div>
       <h2>Monitor do Professor</h2>
@@ -64,6 +63,43 @@
 </div>
 
 <script>
+  // ===== 🚫 TRAVA DE ABA ÚNICA =====
+  (function travaAbaUnica() {
+    const canal = new BroadcastChannel("simulador_abas");
+    let bloqueado = false;
+
+    canal.postMessage("nova_aba");
+
+    canal.onmessage = (e) => {
+      if (e.data === "nova_aba" && !bloqueado) {
+        canal.postMessage("ocupado");
+      }
+      if (e.data === "ocupado") {
+        bloqueado = true;
+        mostrarBloqueio();
+      }
+    };
+
+    function mostrarBloqueio() {
+      document.body.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;
+          justify-content:center;min-height:100vh;font-family:'Segoe UI',Arial,sans-serif;
+          text-align:center;color:#fff;padding:20px;">
+          <div style="font-size:64px;margin-bottom:10px;">⚠️</div>
+          <h2 style="margin-bottom:10px;">Este simulador já está aberto em outra aba</h2>
+          <p style="color:#9fb6cc;margin-bottom:24px;">Feche as outras abas e recarregue esta página.</p>
+          <button onclick="location.reload()" style="padding:12px 28px;font-size:16px;
+            background:#2e7d4f;color:#fff;border:none;border-radius:10px;
+            cursor:pointer;font-weight:bold;">🔄 Tentar novamente</button>
+        </div>`;
+    }
+
+    window.addEventListener("beforeunload", () => {
+      canal.postMessage("liberou");
+    });
+  })();
+  // ===== FIM DA TRAVA =====
+
   // Gera o QR Code apontando para o app do aluno
   var urlAluno = location.origin + location.pathname.replace(/[^/]*$/, "") + "celular_v4.html";
   new QRCode(document.getElementById("qrcode"), {
