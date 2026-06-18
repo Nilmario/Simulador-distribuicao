@@ -38,25 +38,23 @@
   /* ===== ESTRADA Forn→CD ===== */
   .estradaWrap{flex:0 0 120px;width:120px;min-width:120px;}
   .estrada{position:relative;height:22px;background:#37474f;border-radius:5px;
-    margin-top:22px; /* espaço para o caminhão ficar ACIMA da linha */
+    margin-top:22px;
     background-image:repeating-linear-gradient(90deg,transparent 0 16px,#ffca28 16px 30px);
     background-size:30px 4px;background-repeat:repeat-x;background-position:center;}
   .estrada small{display:block;text-align:center;font-size:11px;color:#546e7a;margin-top:3px;}
-  /* caminhão MAIOR posicionado ACIMA da estrada, virado para a DIREITA */
   .caminhao{position:absolute;top:-26px;font-size:32px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estrada.parada .caminhao{opacity:.25;}
 
   /* ===== ESTRADA CD→Loja ===== */
   .estradaLoja{position:relative;height:26px;background:#37474f;border-radius:6px;flex:1;min-width:100px;
-    margin-top:24px; /* espaço para o caminhão ficar ACIMA da linha */
+    margin-top:24px;
     background-image:repeating-linear-gradient(90deg,transparent 0 14px,#ffca28 14px 28px);
     background-size:28px 5px;background-repeat:repeat-x;background-position:center;
     border:1px solid #263238;}
   .estradaLoja .caminhao{position:absolute;top:-26px;font-size:30px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estradaLoja.parada .caminhao{opacity:.25;}
-  /* coluna da estrada da loja + legenda embaixo */
   .lojaEstradaCol{display:flex;flex-direction:column;align-items:stretch;min-width:105px;}
   .transLojaLabel{text-align:center;font-size:12px;color:#1a3c5e;margin-top:3px;white-space:nowrap;font-weight:bold;}
 
@@ -73,6 +71,25 @@
   .lojaInfo b{color:#102a43;font-size:16px;}
   .lojaInfo span{color:#789;font-size:15px;}
   .falta{color:#c0392b !important;font-weight:bold;}
+
+  /* ===== DEMANDA EM DESTAQUE ===== */
+  .demandaBadge{
+    display:inline-flex;align-items:center;gap:4px;
+    background:#fff3cd;color:#856404;
+    border:2px solid #ffca28;border-radius:8px;
+    padding:2px 8px;font-size:14px;font-weight:bold;
+    margin-top:3px;
+  }
+  .demandaBadge .dnum{font-size:17px;color:#b8860b;}
+  .demandaBadge.alerta{
+    background:#fdecea;color:#c0392b;border-color:#c0392b;
+    animation:pulsaDem 1s ease-in-out infinite;
+  }
+  .demandaBadge.alerta .dnum{color:#c0392b;}
+  @keyframes pulsaDem{
+    0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.4);}
+    50%{box-shadow:0 0 0 6px rgba(192,57,43,0);}
+  }
 
   .resumo{font-size:13px;margin-top:8px;border-top:1px solid #eee;padding-top:6px;}
   .resumo div{display:flex;justify-content:space-between;padding:2px 6px;}
@@ -453,7 +470,9 @@ function render(snap){
           <span class="casa">🏪</span>
           <div class="lojaInfo">
             <b>Loja ${l}</b> · Estoque: <b class="${falta?'falta':''}">${est}</b><br>
-            <span>Demanda: ${d}</span>
+            <span class="demandaBadge ${falta?'alerta':''}">
+              📈 Demanda: <span class="dnum">${d}</span>
+            </span>
           </div>
         </div>`;
     }
