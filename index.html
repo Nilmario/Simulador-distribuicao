@@ -63,24 +63,18 @@
 </div>
 
 <script>
-  // ===== 🚫 TRAVA DE ABA ÚNICA =====
+  // ===== 🚫 TRAVA DE ABA ÚNICA (híbrida: instantânea + confiável) =====
   (function travaAbaUnica() {
-    const canal = new BroadcastChannel("simulador_abas");
+    const CHAVE = "simulador_aba_ativa";
+    const meuId = Date.now() + "-" + Math.random().toString(36).slice(2);
     let bloqueado = false;
+    let canal = null;
 
-    canal.postMessage("nova_aba");
+    try { canal = new BroadcastChannel("simulador_abas"); } catch (e) {}
 
-    canal.onmessage = (e) => {
-      if (e.data === "nova_aba" && !bloqueado) {
-        canal.postMessage("ocupado");
-      }
-      if (e.data === "ocupado") {
-        bloqueado = true;
-        mostrarBloqueio();
-      }
-    };
-
-    function mostrarBloqueio() {
+    function bloquear() {
+      if (bloqueado) return;
+      bloqueado = true;
       document.body.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;
           justify-content:center;min-height:100vh;font-family:'Segoe UI',Arial,sans-serif;
@@ -94,8 +88,51 @@
         </div>`;
     }
 
+    // Verifica se já existe outra aba ativa (heartbeat recente)
+    function verificar() {
+      const dados = localStorage.getItem(CHAVE);
+      if (dados) {
+        try {
+          const info = JSON.parse(dados);
+          if (info.id !== meuId && (Date.now() - info.ts) < 3000) {
+            bloquear();
+            return;
+          }
+        } catch (e) {}
+      }
+      if (!bloqueado) {
+        localStorage.setItem(CHAVE, JSON.stringify({ id: meuId, ts: Date.now() }));
+      }
+    }
+
+    // Comunicação instantânea entre abas
+    if (canal) {
+      canal.postMessage({ tipo: "ola", id: meuId });
+      canal.onmessage = (e) => {
+        const msg = e.data || {};
+        // Outra aba se apresentou → respondo que já estou ativo
+        if (msg.tipo === "ola" && msg.id !== meuId && !bloqueado) {
+          canal.postMessage({ tipo: "ocupado", id: meuId });
+        }
+        // Alguém disse que está ocupado → eu (recém-chegado) me bloqueio
+        if (msg.tipo === "ocupado" && msg.id !== meuId) {
+          bloquear();
+        }
+      };
+    }
+
+    // Verificação imediata + heartbeat contínuo
+    verificar();
+    setInterval(verificar, 1000);
+
+    // Ao fechar, libera o lugar
     window.addEventListener("beforeunload", () => {
-      canal.postMessage("liberou");
+      const dados = localStorage.getItem(CHAVE);
+      if (dados) {
+        try {
+          if (JSON.parse(dados).id === meuId) localStorage.removeItem(CHAVE);
+        } catch (e) {}
+      }
     });
   })();
   // ===== FIM DA TRAVA =====
