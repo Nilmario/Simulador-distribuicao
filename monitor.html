@@ -35,28 +35,34 @@
   .estoqueCD{font-size:26px;font-weight:bold;color:#1a3c5e;}
   .estoqueCD small{display:block;font-size:12px;color:#789;font-weight:normal;}
 
-  /* ===== ESTRADA Forn→CD (MENOR / MAIS FINA) ===== */
+  /* ===== ESTRADA Forn→CD ===== */
   .estradaWrap{flex:0 0 120px;width:120px;min-width:120px;}
   .estrada{position:relative;height:22px;background:#37474f;border-radius:5px;
     background-image:repeating-linear-gradient(90deg,transparent 0 16px,#ffca28 16px 30px);
     background-size:30px 4px;background-repeat:repeat-x;background-position:center;}
   .estrada small{display:block;text-align:center;font-size:11px;color:#546e7a;margin-top:3px;}
-  /* caminhão posicionado por JS (left %), virado para a DIREITA */
-  .caminhao{position:absolute;top:-8px;font-size:20px;
+  /* caminhão MAIOR posicionado por JS (left %), virado para a DIREITA */
+  .caminhao{position:absolute;top:-12px;font-size:32px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estrada.parada .caminhao{opacity:.25;}
 
-  /* ===== ESTRADA CD→Loja (MAIOR / MAIS VISÍVEL) ===== */
+  /* ===== ESTRADA CD→Loja ===== */
   .estradaLoja{position:relative;height:26px;background:#37474f;border-radius:6px;flex:1;min-width:100px;
     background-image:repeating-linear-gradient(90deg,transparent 0 14px,#ffca28 14px 28px);
     background-size:28px 5px;background-repeat:repeat-x;background-position:center;
     border:1px solid #263238;}
-  .estradaLoja .caminhao{position:absolute;top:-7px;font-size:20px;
+  .estradaLoja .caminhao{position:absolute;top:-11px;font-size:30px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estradaLoja.parada .caminhao{opacity:.25;}
   /* coluna da estrada da loja + legenda embaixo */
   .lojaEstradaCol{display:flex;flex-direction:column;align-items:stretch;min-width:105px;}
   .transLojaLabel{text-align:center;font-size:12px;color:#1a3c5e;margin-top:3px;white-space:nowrap;font-weight:bold;}
+
+  /* ===== AVISO DE CHEGADA DA CARGA ===== */
+  .chegaInfo{font-size:11px;font-weight:bold;margin-top:2px;text-align:center;white-space:nowrap;}
+  .chegaInfo.viajando{color:#c0392b;}
+  .chegaInfo.chegahoje{color:#2e7d4f;}
+  .chegaInfo.vazia{color:#90a4ae;font-weight:normal;}
 
   .lojas{display:flex;flex-direction:column;gap:5px;}
   .loja{display:flex;align-items:center;gap:5px;font-size:15px;background:#f5f8fa;padding:5px 6px;border-radius:6px;}
@@ -90,7 +96,6 @@
     text-shadow:0 2px 6px rgba(0,0,0,.5);}
   .rankBox .sub{text-align:center;color:#aebfd0;font-size:14px;margin-bottom:20px;}
 
-  /* Pódio */
   .podio{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:30px 0 24px;min-height:240px;}
   .degrau{display:flex;flex-direction:column;align-items:center;width:150px;animation:subir .7s ease;}
   @keyframes subir{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
@@ -106,7 +111,6 @@
   .bloco.bronze{height:100px;background:linear-gradient(180deg,#e3a06a,#b06b3c);}
   .bloco.quarto{height:75px;background:linear-gradient(180deg,#5a6e80,#3a4a58);}
 
-  /* lista extra (4º lugar em diante) */
   .rankItem{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-radius:10px;
     margin-bottom:8px;font-size:16px;font-weight:bold;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.25);}
 
@@ -117,7 +121,6 @@
     box-shadow:0 6px 18px rgba(0,0,0,.35);text-align:center;font-size:12px;color:#555;z-index:999;}
   #qrBox.open{display:block;}
 
-  /* ❓ MODAL DE INSTRUÇÕES (COMO JOGAR) */
   #overlayAjuda{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9500;align-items:center;justify-content:center;padding:16px;}
   #caixaAjuda{background:#fff;color:#263238;border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:26px;box-shadow:0 8px 30px rgba(0,0,0,.4);}
   #caixaAjuda h2{color:#1a3c5e;font-size:22px;text-align:center;margin:0 0 6px;}
@@ -160,7 +163,6 @@
 
 <div id="grid" class="grid"></div>
 
-<!-- QR Code recolhível -->
 <button id="qrToggle" onclick="toggleQR()">📲 QR Code</button>
 <div id="qrBox"><div id="qrcode"></div><div>📱 Acesse pelo celular</div></div>
 
@@ -199,7 +201,6 @@
   </div>
 </div>
 
-<!-- ❓ MODAL DE INSTRUÇÕES (COMO JOGAR) -->
 <div id="overlayAjuda">
   <div id="caixaAjuda">
     <h2>📦 Como Jogar</h2>
@@ -327,6 +328,36 @@ function melhorProgressoLoja(chegadasLoja, loja, lead, dia){
   return achou ? melhor : -1;
 }
 
+/* ===== Helpers: dias até a PRÓXIMA chegada ===== */
+function proximaChegadaCD(chegadasCD){
+  let menor = null;
+  for(const k in chegadasCD){
+    if((chegadasCD[k]||0) <= 0) continue;
+    const dia = Number(k);
+    if(dia >= diaAtual && (menor === null || dia < menor)) menor = dia;
+  }
+  return menor;
+}
+
+function proximaChegadaLoja(chegadasLoja, loja){
+  let menor = null;
+  for(const k in chegadasLoja){
+    const q = (chegadasLoja[k] && chegadasLoja[k][loja]) || 0;
+    if(q <= 0) continue;
+    const dia = Number(k);
+    if(dia >= diaAtual && (menor === null || dia < menor)) menor = dia;
+  }
+  return menor;
+}
+
+function htmlChegada(diaChegada){
+  if(diaChegada === null) return `<div class="chegaInfo vazia">—</div>`;
+  const faltam = diaChegada - diaAtual;
+  if(faltam <= 0) return `<div class="chegaInfo chegahoje">📦 Chega hoje!</div>`;
+  if(faltam === 1) return `<div class="chegaInfo viajando">🚩 Chega amanhã</div>`;
+  return `<div class="chegaInfo viajando">🚩 Chega em ${faltam} dias</div>`;
+}
+
 window.onload = () => {
   db.ref("jogo/config").once("value").then(s=>{
     if(s.exists()) CFG = {...CFG, ...s.val()};
@@ -415,6 +446,7 @@ function render(snap){
               <div class="caminhao" style="left:${posL}%">🚚</div>
             </div>
             <div class="transLojaLabel">CD→Loja: ${emCaminho}</div>
+            ${htmlChegada(proximaChegadaLoja(chegadasLoja, l))}
           </div>
           <span class="casa">🏪</span>
           <div class="lojaInfo">
@@ -437,6 +469,7 @@ function render(snap){
               <div class="caminhao" style="left:${posCD}%">🚛</div>
             </div>
             <small>Forn→CD: ${transCD}</small>
+            ${htmlChegada(proximaChegadaCD(chegadasCD))}
           </div>
           <div class="col box cd">
             <div class="titSec">🏬 CD</div>
