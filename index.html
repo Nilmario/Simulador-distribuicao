@@ -63,11 +63,12 @@
 </div>
 
 <script>
-  // ===== 🚫 TRAVA DE ABA ÚNICA (híbrida: instantânea + confiável) =====
+  // ===== 🚫 TRAVA DE ABA ÚNICA (corrigida p/ Chrome) =====
   (function travaAbaUnica() {
     const CHAVE = "simulador_aba_ativa";
     const meuId = Date.now() + "-" + Math.random().toString(36).slice(2);
     let bloqueado = false;
+    let confirmado = false; // só viro "ativo" depois de confirmar que ninguém respondeu
     let canal = null;
 
     try { canal = new BroadcastChannel("simulador_abas"); } catch (e) {}
@@ -88,50 +89,51 @@
         </div>`;
     }
 
-    // Verifica se já existe outra aba ativa (heartbeat recente)
-    function verificar() {
-      const dados = localStorage.getItem(CHAVE);
-      if (dados) {
-        try {
-          const info = JSON.parse(dados);
-          if (info.id !== meuId && (Date.now() - info.ts) < 3000) {
-            bloquear();
-            return;
-          }
-        } catch (e) {}
-      }
-      if (!bloqueado) {
-        localStorage.setItem(CHAVE, JSON.stringify({ id: meuId, ts: Date.now() }));
-      }
+    function tornarAtivo() {
+      if (bloqueado || confirmado) return;
+      confirmado = true;
+      localStorage.setItem(CHAVE, JSON.stringify({ id: meuId, ts: Date.now() }));
+      // Heartbeat: confirma que esta aba continua viva
+      setInterval(() => {
+        if (!bloqueado) localStorage.setItem(CHAVE, JSON.stringify({ id: meuId, ts: Date.now() }));
+      }, 1000);
     }
 
-    // Comunicação instantânea entre abas
     if (canal) {
-      canal.postMessage({ tipo: "ola", id: meuId });
       canal.onmessage = (e) => {
         const msg = e.data || {};
-        // Outra aba se apresentou → respondo que já estou ativo
-        if (msg.tipo === "ola" && msg.id !== meuId && !bloqueado) {
-          canal.postMessage({ tipo: "ocupado", id: meuId });
+        // Outra aba perguntou se tem alguém → se EU já sou o ativo, respondo ocupado
+        if (msg.tipo === "tem_alguem" && msg.id !== meuId && confirmado && !bloqueado) {
+          canal.postMessage({ tipo: "estou_aqui", id: meuId });
         }
-        // Alguém disse que está ocupado → eu (recém-chegado) me bloqueio
-        if (msg.tipo === "ocupado" && msg.id !== meuId) {
+        // Recebi resposta de uma aba ativa → me bloqueio
+        if (msg.tipo === "estou_aqui" && msg.id !== meuId) {
           bloquear();
         }
       };
+      // Pergunto se já tem alguém ativo
+      canal.postMessage({ tipo: "tem_alguem", id: meuId });
     }
 
-    // Verificação imediata + heartbeat contínuo
-    verificar();
-    setInterval(verificar, 1000);
+    // Também confere o localStorage (caso o canal falhe)
+    const dados = localStorage.getItem(CHAVE);
+    if (dados) {
+      try {
+        const info = JSON.parse(dados);
+        if (info.id !== meuId && (Date.now() - info.ts) < 3000) {
+          bloquear();
+        }
+      } catch (e) {}
+    }
 
-    // Ao fechar, libera o lugar
+    // ⏳ Aguarda 400ms por respostas antes de me declarar ativo.
+    // Esse tempinho resolve o problema de timing do Chrome ao recarregar.
+    setTimeout(tornarAtivo, 400);
+
     window.addEventListener("beforeunload", () => {
-      const dados = localStorage.getItem(CHAVE);
-      if (dados) {
-        try {
-          if (JSON.parse(dados).id === meuId) localStorage.removeItem(CHAVE);
-        } catch (e) {}
+      const d = localStorage.getItem(CHAVE);
+      if (d) {
+        try { if (JSON.parse(d).id === meuId) localStorage.removeItem(CHAVE); } catch (e) {}
       }
     });
   })();
