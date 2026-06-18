@@ -38,20 +38,22 @@
   /* ===== ESTRADA Forn→CD ===== */
   .estradaWrap{flex:0 0 120px;width:120px;min-width:120px;}
   .estrada{position:relative;height:22px;background:#37474f;border-radius:5px;
+    margin-top:22px; /* espaço para o caminhão ficar ACIMA da linha */
     background-image:repeating-linear-gradient(90deg,transparent 0 16px,#ffca28 16px 30px);
     background-size:30px 4px;background-repeat:repeat-x;background-position:center;}
   .estrada small{display:block;text-align:center;font-size:11px;color:#546e7a;margin-top:3px;}
-  /* caminhão MAIOR posicionado por JS (left %), virado para a DIREITA */
-  .caminhao{position:absolute;top:-12px;font-size:32px;
+  /* caminhão MAIOR posicionado ACIMA da estrada, virado para a DIREITA */
+  .caminhao{position:absolute;top:-26px;font-size:32px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estrada.parada .caminhao{opacity:.25;}
 
   /* ===== ESTRADA CD→Loja ===== */
   .estradaLoja{position:relative;height:26px;background:#37474f;border-radius:6px;flex:1;min-width:100px;
+    margin-top:24px; /* espaço para o caminhão ficar ACIMA da linha */
     background-image:repeating-linear-gradient(90deg,transparent 0 14px,#ffca28 14px 28px);
     background-size:28px 5px;background-repeat:repeat-x;background-position:center;
     border:1px solid #263238;}
-  .estradaLoja .caminhao{position:absolute;top:-11px;font-size:30px;
+  .estradaLoja .caminhao{position:absolute;top:-26px;font-size:30px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estradaLoja.parada .caminhao{opacity:.25;}
   /* coluna da estrada da loja + legenda embaixo */
