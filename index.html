@@ -18,6 +18,7 @@
   .avancar{background:#1a3c5e;color:#fff;}
   .reset{background:#c0392b;color:#fff;}
   .opt{background:#546e7a;color:#fff;}
+  .ajuda{background:#f39c12;color:#fff;}
   button:disabled{background:#999;cursor:not-allowed;}
 
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:1500px;margin:0 auto;}
@@ -86,6 +87,28 @@
   .rankItem{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:8px;font-size:16px;font-weight:bold;color:#fff;}
 
   #qrBox{position:fixed;bottom:12px;right:12px;background:#fff;padding:10px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.15);text-align:center;font-size:11px;}
+
+  /* ❓ MODAL DE INSTRUÇÕES (COMO JOGAR) */
+  #overlayAjuda{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9500;align-items:center;justify-content:center;padding:16px;}
+  #caixaAjuda{background:#fff;color:#263238;border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:26px;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+  #caixaAjuda h2{color:#1a3c5e;font-size:22px;text-align:center;margin:0 0 6px;}
+  #caixaAjuda .sub{text-align:center;color:#789;font-size:13px;margin-bottom:16px;}
+  #caixaAjuda h3{color:#2e7d4f;font-size:16px;margin:18px 0 6px;border-bottom:2px solid #e0e6ea;padding-bottom:4px;}
+  #caixaAjuda p,#caixaAjuda li{font-size:14px;line-height:1.55;}
+  #caixaAjuda ul{padding-left:20px;margin:6px 0;}
+  #caixaAjuda .destaque{background:#eef7f0;border-left:4px solid #2e7d4f;border-radius:6px;padding:12px;font-size:14px;margin-top:6px;}
+  #caixaAjuda .frete{display:flex;gap:10px;margin-top:10px;}
+  #caixaAjuda .frete div{flex:1;border-radius:8px;padding:10px;font-size:13px;text-align:center;}
+  #caixaAjuda .eco{background:#fff3cd;color:#856404;}
+  #caixaAjuda .rap{background:#d4edda;color:#155724;}
+  #caixaAjuda .vit{display:flex;gap:10px;margin-top:10px;}
+  #caixaAjuda .vit div{flex:1;border-radius:10px;padding:14px;text-align:center;font-size:13px;font-weight:bold;}
+  #caixaAjuda .ouro{background:linear-gradient(135deg,#f9d423,#e6a817);color:#5a3e00;}
+  #caixaAjuda .escuro{background:linear-gradient(135deg,#37474f,#263238);color:#fff;}
+  #caixaAjuda .fechar{width:100%;padding:13px;border:none;border-radius:10px;background:#c0392b;color:#fff;font-size:15px;font-weight:bold;margin-top:18px;cursor:pointer;}
+  #caixaAjuda table{width:100%;border-collapse:collapse;margin-top:8px;}
+  #caixaAjuda th,#caixaAjuda td{border:1px solid #cfd8dc;padding:8px;font-size:13px;text-align:left;}
+  #caixaAjuda th{background:#1a3c5e;color:#fff;}
 </style>
 </head>
 <body>
@@ -95,6 +118,7 @@
   <button id="btnIniciar" class="iniciar" onclick="iniciarJogo()">▶️ INICIAR (Dia 0)</button>
   <button id="btnAvancar" class="avancar" onclick="avancarDia()" disabled>⏭️ AVANÇAR DIA</button>
   <button onclick="abrirOpcoes()" class="opt">⚙️ OPÇÕES</button>
+  <button onclick="abrirAjuda()" class="ajuda">❓ COMO JOGAR</button>
   <button onclick="resetar()" class="reset">🔄 REINICIAR</button>
 </div>
 
@@ -142,6 +166,65 @@
   </div>
 </div>
 
+<!-- ❓ MODAL DE INSTRUÇÕES (COMO JOGAR) -->
+<div id="overlayAjuda">
+  <div id="caixaAjuda">
+    <h2>📦 Como Jogar</h2>
+    <div class="sub">Manual rápido da Simulação de Cadeia de Suprimentos</div>
+
+    <div class="destaque">
+      🎯 <b>Objetivo:</b> cada equipe gerencia uma cadeia <b>Fornecedor → CD → 3 Lojas</b>.
+      Abasteça as lojas sem faltar produto e sem gastar demais. <b>Vence quem tiver o maior lucro!</b> 🏆
+    </div>
+
+    <h3>👨‍🏫 Como o professor conduz</h3>
+    <ul>
+      <li><b>⚙️ Opções:</b> configure custos, lead times, demanda e total de dias antes de começar.</li>
+      <li><b>▶️ Iniciar (Dia 0):</b> zera as equipes e libera a entrada dos alunos.</li>
+      <li>Confira no monitor se <b>todas as equipes apareceram</b> (A, B, C, D).</li>
+      <li><b>⏭️ Avançar Dia:</b> só clique quando todas as equipes enviarem a decisão.</li>
+      <li>No último dia, o <b>🏆 Ranking Final</b> aparece automaticamente.</li>
+      <li><b>🔄 Reiniciar:</b> apaga tudo e desconecta os celulares para uma nova partida.</li>
+    </ul>
+
+    <h3>📱 Como os alunos jogam</h3>
+    <ul>
+      <li>Leem o <b>QR Code</b>, abrem no celular e escolhem a equipe.</li>
+      <li>Aguardam o professor iniciar a partida.</li>
+      <li>A cada dia decidem <b>quanto comprar (Forn→CD)</b> e <b>como distribuir (CD→Lojas)</b>.</li>
+      <li>Tocam em <b>✅ ENVIAR DECISÃO</b> (podem reenviar até o dia avançar).</li>
+    </ul>
+
+    <h3>🚚 Tipos de frete</h3>
+    <div class="frete">
+      <div class="eco">🐢 <b>Econômico</b><br>mais barato · demora mais</div>
+      <div class="rap">⚡ <b>Rápido</b><br>mais caro · chega antes</div>
+    </div>
+
+    <h3>📊 Indicadores no monitor</h3>
+    <table>
+      <tr><th>Estoque CD</th><th>Forn→CD</th><th>CD→Lojas</th><th>Nível serviço</th></tr>
+      <tr><td>Disponível no CD</td><td>A caminho do fornecedor</td><td>A caminho das lojas</td><td>% da demanda atendida</td></tr>
+    </table>
+
+    <h3>⚖️ Estratégia</h3>
+    <ul>
+      <li>📦 <b>Estoque demais</b> = dinheiro parado e custo de armazenagem.</li>
+      <li>🚨 <b>Estoque de menos</b> = falta produto e nível de serviço cai.</li>
+      <li>⚡ <b>Frete rápido sempre</b> = caro demais · 🐢 <b>econômico sempre</b> = risco de atrasar.</li>
+      <li>🎯 O segredo é o <b>equilíbrio</b>: prever a demanda e planejar com antecedência.</li>
+    </ul>
+
+    <h3>🏁 Fim do jogo</h3>
+    <div class="vit">
+      <div class="ouro">🏆 Tela dourada<br>Sua equipe venceu!</div>
+      <div class="escuro">🏁 Tela escura<br>Mostra a equipe vencedora</div>
+    </div>
+
+    <button class="fechar" onclick="fecharAjuda()">Entendi! 👍</button>
+  </div>
+</div>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyA_U9JAwdjIBG-GQAPWTlQ99B7ZYpSW01w",
@@ -179,22 +262,17 @@ let ultimasEquipes = {};
 const rand = (min,max)=>Math.floor(Math.random()*(max-min+1))+min;
 const $ = id => document.getElementById(id);
 
-/* ===== Helper: progresso (0→1) do caminhão na pista =====
-   diaChegada = chave em chegadasCD/chegadasLoja (dia em que a carga chega)
-   lead       = tempo total de viagem
-   dia        = dia atual
-   Retorna a fração JÁ percorrida da pista. */
+/* ===== Helper: progresso (0→1) do caminhão na pista ===== */
 function progressoViagem(diaChegada, lead, dia){
   diaChegada = Number(diaChegada);
   if(!diaChegada || !lead || lead<=0) return 0;
-  const saida = diaChegada - lead;     // dia em que a carga saiu
-  let p = (dia - saida) / lead;        // fração percorrida
+  const saida = diaChegada - lead;
+  let p = (dia - saida) / lead;
   if(p < 0) p = 0;
   if(p > 1) p = 1;
   return p;
 }
 
-/* Pega a viagem MAIS PRÓXIMA de chegar (maior progresso) p/ posicionar o caminhão */
 function melhorProgressoCD(chegadasCD, lead, dia){
   let melhor = 0, achou = false;
   for(const k in chegadasCD){
@@ -203,7 +281,7 @@ function melhorProgressoCD(chegadasCD, lead, dia){
     const p = progressoViagem(k, lead, dia);
     if(p > melhor) melhor = p;
   }
-  return achou ? melhor : -1; // -1 = nenhuma viagem
+  return achou ? melhor : -1;
 }
 
 function melhorProgressoLoja(chegadasLoja, loja, lead, dia){
@@ -254,7 +332,6 @@ function render(snap){
   const grid = $("grid");
   grid.innerHTML = "";
 
-  // 🔑 CORREÇÃO: só mostra equipes no monitor SE o professor já iniciou o jogo
   const visiveis = jogoIniciado
     ? EQUIPES.filter(id => equipes[id] && equipes[id].ativa)
     : [];
@@ -277,16 +354,13 @@ function render(snap){
     const chegadasCD   = e.chegadasCD   || {};
     const chegadasLoja = e.chegadasLoja || {};
 
-    // ===== POSIÇÃO DO CAMINHÃO Forn→CD =====
-    const leadCDmedio = (CFG.forn_leadRapido + CFG.forn_leadEconomico)/2; // fallback
-    // tenta achar lead exato pela carga em viagem; usa o pedido salvo se houver
+    const leadCDmedio = (CFG.forn_leadRapido + CFG.forn_leadEconomico)/2;
     let posCD = 0, parada = "parada";
     if(jogoIniciado && transCD > 0){
-      // usa o maior lead como referência de pista (econômico) p/ a régua de % funcionar p/ ambos
       const pRap = melhorProgressoCD(chegadasCD, CFG.forn_leadRapido, diaAtual);
       const pEco = melhorProgressoCD(chegadasCD, CFG.forn_leadEconomico, diaAtual);
-      const p = Math.max(pRap, pEco); // pega o mais adiantado
-      if(p >= 0){ posCD = p*88; parada = ""; } // 88% p/ caminhão não sair da pista
+      const p = Math.max(pRap, pEco);
+      if(p >= 0){ posCD = p*88; parada = ""; }
     }
 
     let lojasHTML = "";
@@ -296,7 +370,6 @@ function render(snap){
       const falta = est<d;
       const emCaminho = tl[l]||0;
 
-      // ===== POSIÇÃO DO CAMINHÃO CD→Loja =====
       let posL = 0, paradaL = "parada";
       if(jogoIniciado && emCaminho > 0){
         const pRap = melhorProgressoLoja(chegadasLoja, l, CFG.loja_leadRapido, diaAtual);
@@ -501,7 +574,6 @@ async function avancarDia(){
   if(novoDia >= CFG.totalDias){
     alert("🏁 Jogo encerrado no dia " + novoDia + "!\n\nO RANKING FINAL já está na tela. 🏆");
 
-    // pequena pausa pra garantir que o ranking renderizou antes do confirm
     setTimeout(async () => {
       const limpar = confirm(
         "🧹 LIMPAR todos os dados agora?\n\n" +
@@ -516,11 +588,11 @@ async function avancarDia(){
         await db.ref("jogo/estado").set({
           dia: 0,
           iniciado: false,
-          partidaId: Date.now()   // 🔑 desconecta os celulares automaticamente
+          partidaId: Date.now()
         });
         alert("✅ Dados limpos! Pronto para uma nova partida.");
       }
-    }, 800); // 0,8s pra ver o ranking aparecer
+    }, 800);
   }
 }
 
@@ -546,7 +618,7 @@ function abrirOpcoes(){
 
 function salvarOpcoes(){
   CFG = {
-    ...CFG, // 🔒 preserva os fretes fixos
+    ...CFG,
     custoCompra:+$("cfgCompra").value, precoVenda:+$("cfgVenda").value,
     custoEstoque:+$("cfgEstoque").value, custoFalta:+$("cfgFalta").value,
     custoPedido:+$("cfgPedido").value, custoEncerramento:+$("cfgEncerr").value,
@@ -562,6 +634,10 @@ function salvarOpcoes(){
 }
 
 function fecharOpcoes(){ $("overlay").style.display="none"; }
+
+/* ====== ❓ MODAL DE INSTRUÇÕES (COMO JOGAR) ====== */
+function abrirAjuda(){ $("overlayAjuda").style.display="flex"; }
+function fecharAjuda(){ $("overlayAjuda").style.display="none"; }
 </script>
 </body>
 </html>
