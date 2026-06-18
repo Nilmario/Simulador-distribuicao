@@ -35,35 +35,35 @@
   .estoqueCD{font-size:26px;font-weight:bold;color:#1a3c5e;}
   .estoqueCD small{display:block;font-size:12px;color:#789;font-weight:normal;}
 
-  /* ===== ESTRADA Forn→CD ===== */
-  .estradaWrap{flex:1;min-width:90px;}
-  .estrada{position:relative;height:26px;background:#37474f;border-radius:5px;
+  /* ===== ESTRADA Forn→CD (MENOR / MAIS FINA) ===== */
+  .estradaWrap{flex:0 0 120px;width:120px;min-width:120px;}
+  .estrada{position:relative;height:22px;background:#37474f;border-radius:5px;
     background-image:repeating-linear-gradient(90deg,transparent 0 16px,#ffca28 16px 30px);
     background-size:30px 4px;background-repeat:repeat-x;background-position:center;}
   .estrada small{display:block;text-align:center;font-size:11px;color:#546e7a;margin-top:3px;}
   /* caminhão posicionado por JS (left %), virado para a DIREITA */
-  .caminhao{position:absolute;top:-8px;font-size:22px;
+  .caminhao{position:absolute;top:-8px;font-size:20px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estrada.parada .caminhao{opacity:.25;}
 
-  /* ===== ESTRADA CD→Loja (MAIS VISÍVEL) ===== */
-  .estradaLoja{position:relative;height:22px;background:#37474f;border-radius:6px;flex:1;min-width:70px;
-    background-image:repeating-linear-gradient(90deg,transparent 0 12px,#ffca28 12px 24px);
-    background-size:24px 4px;background-repeat:repeat-x;background-position:center;
+  /* ===== ESTRADA CD→Loja (MAIOR / MAIS VISÍVEL) ===== */
+  .estradaLoja{position:relative;height:26px;background:#37474f;border-radius:6px;flex:1;min-width:100px;
+    background-image:repeating-linear-gradient(90deg,transparent 0 14px,#ffca28 14px 28px);
+    background-size:28px 5px;background-repeat:repeat-x;background-position:center;
     border:1px solid #263238;}
-  .estradaLoja .caminhao{position:absolute;top:-7px;font-size:18px;
+  .estradaLoja .caminhao{position:absolute;top:-7px;font-size:20px;
     transform:scaleX(-1);transition:left .8s ease;}
   .estradaLoja.parada .caminhao{opacity:.25;}
   /* coluna da estrada da loja + legenda embaixo */
-  .lojaEstradaCol{display:flex;flex-direction:column;align-items:stretch;min-width:75px;}
-  .transLojaLabel{text-align:center;font-size:11px;color:#1a3c5e;margin-top:3px;white-space:nowrap;font-weight:bold;}
+  .lojaEstradaCol{display:flex;flex-direction:column;align-items:stretch;min-width:105px;}
+  .transLojaLabel{text-align:center;font-size:12px;color:#1a3c5e;margin-top:3px;white-space:nowrap;font-weight:bold;}
 
   .lojas{display:flex;flex-direction:column;gap:5px;}
-  .loja{display:flex;align-items:center;gap:5px;font-size:13px;background:#f5f8fa;padding:5px 6px;border-radius:6px;}
-  .casa{font-size:20px;}
-  .lojaInfo{flex:1;}
-  .lojaInfo b{color:#102a43;}
-  .lojaInfo span{color:#789;}
+  .loja{display:flex;align-items:center;gap:5px;font-size:15px;background:#f5f8fa;padding:5px 6px;border-radius:6px;}
+  .casa{font-size:22px;}
+  .lojaInfo{flex:1;font-size:15px;}
+  .lojaInfo b{color:#102a43;font-size:16px;}
+  .lojaInfo span{color:#789;font-size:15px;}
   .falta{color:#c0392b !important;font-weight:bold;}
 
   .resumo{font-size:13px;margin-top:8px;border-top:1px solid #eee;padding-top:6px;}
@@ -279,7 +279,6 @@ const MEDALHAS = ["🥇","🥈","🥉","4️⃣"];
 let CFG = {
   custoCompra:70, precoVenda:100, custoEstoque:10, custoFalta:100,
   custoPedido:2, custoEncerramento:3,
-  // 🔒 FRETE FIXO (não editável no modal)
   forn_freteRapido:5, forn_freteEconomico:2,
   forn_leadRapido:12,  forn_leadEconomico:16,
   loja_freteRapido:3, loja_freteEconomico:1,
@@ -295,7 +294,6 @@ let ultimasEquipes = {};
 const rand = (min,max)=>Math.floor(Math.random()*(max-min+1))+min;
 const $ = id => document.getElementById(id);
 
-/* ===== Helper: progresso (0→1) do caminhão na pista ===== */
 function progressoViagem(diaChegada, lead, dia){
   diaChegada = Number(diaChegada);
   if(!diaChegada || !lead || lead<=0) return 0;
@@ -387,7 +385,6 @@ function render(snap){
     const chegadasCD   = e.chegadasCD   || {};
     const chegadasLoja = e.chegadasLoja || {};
 
-    const leadCDmedio = (CFG.forn_leadRapido + CFG.forn_leadEconomico)/2;
     let posCD = 0, parada = "parada";
     if(jogoIniciado && transCD > 0){
       const pRap = melhorProgressoCD(chegadasCD, CFG.forn_leadRapido, diaAtual);
@@ -473,11 +470,10 @@ function atualizarRanking(){
     .map(id=>({id, lucro: ultimasEquipes[id].lucro||0, nivel: ultimasEquipes[id].nivelServico||0}))
     .sort((a,b)=>b.lucro-a.lucro);
 
-  // ===== Monta o pódio (top 3) na ordem visual: 2º · 1º · 3º =====
   const podio = $("podio");
   podio.innerHTML = "";
 
-  const ordemVisual = [1, 0, 2]; // posições (índices) na ordem dos degraus
+  const ordemVisual = [1, 0, 2];
   const classeBloco = {0:"ouro", 1:"prata", 2:"bronze"};
 
   ordemVisual.forEach(idx=>{
@@ -493,7 +489,6 @@ function atualizarRanking(){
       </div>`;
   });
 
-  // ===== Lista do 4º lugar em diante =====
   let html = "";
   lista.slice(3).forEach((eq,i)=>{
     const pos = i + 4;
@@ -626,9 +621,6 @@ async function avancarDia(){
   const novoDia = diaAtual+1;
   await db.ref("jogo/estado").update({dia:novoDia});
 
-  // ===================================================================
-  // 🏁 ENCERRAMENTO DO JOGO + LIMPEZA AUTOMÁTICA (com confirmação)
-  // ===================================================================
   if(novoDia >= CFG.totalDias){
     alert("🏁 Jogo encerrado no dia " + novoDia + "!\n\nO PÓDIO FINAL já está na tela. 🏆");
 
