@@ -108,6 +108,12 @@
   .row input{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;}
   .modalBtns{display:flex;gap:10px;margin-top:18px;}
 
+  /* ===== CONFETES ===== */
+  #confeteCanvas{
+    position:fixed;inset:0;width:100%;height:100%;
+    pointer-events:none;z-index:9000;display:none;
+  }
+
   /* ===== RANKING + PÓDIO F1 ===== */
   .rankBox{display:none;max-width:760px;margin:0 auto 20px;background:linear-gradient(160deg,#0f1f33,#1a3c5e);
     border-radius:18px;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,.35);color:#fff;}
@@ -163,6 +169,7 @@
 </style>
 </head>
 <body>
+<canvas id="confeteCanvas"></canvas>
 <h1>📦 Simulador de Cadeia de Suprimentos</h1>
 <div class="topbar">
   <span class="dia">DIA <span id="diaAtual">0</span> / <span id="totalDias">30</span></span>
@@ -515,9 +522,16 @@ function render(snap){
 
 
 /* ====== RANKING FINAL + PÓDIO F1 ====== */
+let confeteJaDisparado = false;
+
 function atualizarRanking(){
   const box = $("rankBox");
-  if(!jogoIniciado || diaAtual < CFG.totalDias){ box.style.display="none"; return; }
+  if(!jogoIniciado || diaAtual < CFG.totalDias){
+    box.style.display="none";
+    confeteJaDisparado = false;   // reseta para a próxima partida
+    pararConfete();
+    return;
+  }
 
   const lista = EQUIPES
     .filter(id=>ultimasEquipes[id] && ultimasEquipes[id].ativa)
@@ -554,6 +568,91 @@ function atualizarRanking(){
   $("rankLista").innerHTML = html;
 
   box.style.display = "block";
+
+  // dispara os confetes apenas uma vez quando o pódio aparece
+  if(!confeteJaDisparado && lista.length > 0){
+    confeteJaDisparado = true;
+    lancarConfete(8000); // chuva intensa por 8 segundos
+  }
+}
+
+/* ====== 🎉 CONFETES ====== */
+let confeteAnim = null;
+let confetePartes = [];
+
+function lancarConfete(duracaoMs){
+  const canvas = $("confeteCanvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = "block";
+
+  const cores = ["#f9d423","#e6a817","#2e7d4f","#1a3c5e","#c0392b","#8e44ad","#d35400","#ffffff","#7fb3ff"];
+  confetePartes = [];
+  const QTD = 180;
+  for(let i=0;i<QTD;i++){
+    confetePartes.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*-canvas.height,
+      w: 6+Math.random()*8,
+      h: 8+Math.random()*10,
+      cor: cores[Math.floor(Math.random()*cores.length)],
+      vy: 2+Math.random()*4,
+      vx: -2+Math.random()*4,
+      rot: Math.random()*360,
+      vrot: -6+Math.random()*12
+    });
+  }
+
+  const inicio = Date.now();
+  const fimGeracao = inicio + duracaoMs;
+
+  function frame(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const aindaGerando = Date.now() < fimGeracao;
+    let visiveis = 0;
+
+    confetePartes.forEach(p=>{
+      p.y += p.vy;
+      p.x += p.vx;
+      p.rot += p.vrot;
+
+      // recicla as peças enquanto estiver gerando
+      if(p.y > canvas.height + 20){
+        if(aindaGerando){
+          p.y = -20;
+          p.x = Math.random()*canvas.width;
+        } else {
+          return; // deixa cair e some
+        }
+      }
+      visiveis++;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.cor;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+
+    if(aindaGerando || visiveis > 0){
+      confeteAnim = requestAnimationFrame(frame);
+    } else {
+      pararConfete();
+    }
+  }
+  frame();
+}
+
+function pararConfete(){
+  if(confeteAnim){ cancelAnimationFrame(confeteAnim); confeteAnim = null; }
+  const canvas = $("confeteCanvas");
+  if(canvas){
+    const ctx = canvas.getContext("2d");
+    ctx && ctx.clearRect(0,0,canvas.width,canvas.height);
+    canvas.style.display = "none";
+  }
 }
 
 /* ====== CONTROLE DO JOGO ====== */
@@ -676,10 +775,10 @@ async function avancarDia(){
   await db.ref("jogo/estado").update({dia:novoDia});
 
   if(novoDia >= CFG.totalDias){
-    alert("🏁 Jogo encerrado no dia " + novoDia + "!\n\nO PÓDIO FINAL já está na tela. 🏆");
-
+    // confetes e pódio já aparecem na tela — deixa todos curtirem os campeões 🎉
     setTimeout(async () => {
       const limpar = confirm(
+        "🏁 Partida encerrada! Curtiram o pódio? 🏆\n\n" +
         "🧹 LIMPAR todos os dados agora?\n\n" +
         "⚠️ O ranking será apagado e os celulares dos alunos\n" +
         "voltarão para a tela de seleção de equipe.\n\n" +
@@ -687,6 +786,7 @@ async function avancarDia(){
       );
 
       if(limpar){
+        pararConfete();
         await db.ref("decisoes").remove();
         await db.ref("equipes").remove();
         await db.ref("jogo/estado").set({
@@ -696,7 +796,7 @@ async function avancarDia(){
         });
         alert("✅ Dados limpos! Pronto para uma nova partida.");
       }
-    }, 800);
+    }, 12000); // ⏳ 12 segundos para apreciar os campeões e os confetes
   }
 }
 
