@@ -21,7 +21,6 @@
   .ajuda{background:#f39c12;color:#fff;}
   button:disabled{background:#999;cursor:not-allowed;}
 
-  /* 🔑 NOVO: badge do código da partida */
   .codigoBox{background:#102a43;color:#fff;border-radius:10px;padding:8px 16px;font-size:15px;font-weight:bold;display:none;align-items:center;gap:8px;}
   .codigoBox .cod{font-size:22px;letter-spacing:3px;color:#f9d423;background:rgba(255,255,255,.1);padding:2px 10px;border-radius:6px;}
 
@@ -250,9 +249,10 @@
     <h3>📱 Como os alunos jogam</h3>
     <ul>
       <li>Leem o <b>QR Code</b>, abrem no celular e <b>digitam o código da partida</b>.</li>
-      <li>Escolhem a equipe e aguardam o professor iniciar.</li>
+      <li>Escolhem a equipe (cada equipe só pode ser usada por <b>um grupo</b>) e aguardam o professor iniciar.</li>
       <li>A cada dia decidem <b>quanto comprar (Forn→CD)</b> e <b>como distribuir (CD→Lojas)</b>.</li>
       <li>Tocam em <b>✅ ENVIAR DECISÃO</b> (podem reenviar até o dia avançar).</li>
+      <li>Se o celular cair, ao reabrir voltam <b>na mesma equipe e ponto</b>.</li>
     </ul>
 
     <h3>🚚 Tipos de frete</h3>
@@ -397,7 +397,6 @@ window.onload = () => {
     $("btnIniciar").disabled = jogoIniciado;
     $("btnAvancar").disabled = !jogoIniciado || diaAtual>=CFG.totalDias;
 
-    // 🔑 NOVO: mostra/esconde o código da partida
     if(jogoIniciado && st.codigo){
       $("codigoPartida").textContent = st.codigo;
       $("codigoBox").style.display = "inline-flex";
@@ -667,6 +666,9 @@ function iniciarJogo(){
   EQUIPES.forEach(id=>{
     base[id] = {
       ativa: false,
+      ocupada: false,
+      donoId: null,
+      ultimoHeartbeat: null,
       estoqueCD: CFG.estoqueInicialCD,
       estoqueLojas: {1:20,2:20,3:20},
       demandaLojas: {1:0,2:0,3:0},
@@ -681,7 +683,6 @@ function iniciarJogo(){
   db.ref("equipes").set(base);
   db.ref("decisoes").remove();
 
-  // 🔑 NOVO: gera código curto único da partida
   const codigo = Math.random().toString(36).slice(2,7).toUpperCase();
   db.ref("jogo/estado").set({dia:0, iniciado:true, partidaId: Date.now(), codigo});
   alert("🔑 Código desta partida: " + codigo + "\n\nPasse este código para os alunos digitarem no celular!");
