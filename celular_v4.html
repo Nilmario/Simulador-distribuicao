@@ -30,7 +30,8 @@
   .estoqueInfo b{display:block;font-size:18px;}
   #status{text-align:center;font-size:13px;color:#2e7d4f;font-weight:bold;margin-top:8px;}
   .aviso{text-align:center;background:#fff3cd;color:#856404;border-radius:8px;padding:10px;font-size:13px;margin-bottom:12px;}
-  /* 🏆 animação do modal de fim */
+  /* 🔑 NOVO: campo de código */
+  .codigoInput{font-size:22px !important;text-align:center;letter-spacing:4px;text-transform:uppercase;font-weight:bold;color:#102a43;}
   @keyframes popFim{
     from{transform:scale(.7);opacity:0;}
     to{transform:scale(1);opacity:1;}
@@ -40,14 +41,21 @@
 <body>
 <h1>📦 Painel da Equipe</h1>
 
-<!-- 🏆 NOVO: modal centralizado de fim de jogo -->
 <div id="overlayFim" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px;">
   <div id="bannerFim" style="text-align:center;border-radius:18px;padding:30px 22px;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:340px;width:100%;animation:popFim .3s ease;"></div>
 </div>
 
-<div id="telaSelecao" class="selEquipe">
+<!-- 🔑 NOVO: tela de código de acesso -->
+<div id="telaCodigo" class="selEquipe" style="display:none">
+  <h2>🔑 Código da Partida</h2>
+  <div id="avisoCodigo" class="aviso" style="display:none">⏳ Aguardando o professor iniciar a partida...</div>
+  <p style="font-size:14px;color:#546e7a;margin-bottom:4px">Digite o código informado pelo professor:</p>
+  <input type="text" id="inputCodigo" class="codigoInput" maxlength="5" placeholder="ABC12">
+  <button class="enviar" onclick="validarCodigo()">✅ ENTRAR</button>
+</div>
+
+<div id="telaSelecao" class="selEquipe" style="display:none">
   <h2>Escolha sua equipe</h2>
-  <div id="avisoEspera" class="aviso" style="display:none">⏳ Aguardando o professor iniciar a partida...</div>
   <button class="enviar" onclick="selecionar('A')">🟢 Equipe A</button>
   <button style="background:#1a3c5e" onclick="selecionar('B')">🔵 Equipe B</button>
   <button style="background:#8e44ad" onclick="selecionar('C')">🟣 Equipe C</button>
@@ -119,8 +127,9 @@ let minhaEquipe = null;
 let diaAtual = 0;
 let jogoIniciado = false;
 let jogoEncerrado = false;
+let codigoPartida = null;   // 🔑 NOVO: código atual da partida (vem do Firebase)
+let codigoOk = false;       // 🔑 NOVO: aluno já validou o código?
 
-// 🔒 Fallback dos fretes/leads (caso o professor ainda não tenha salvo as opções)
 let CFG = {
   custoCompra: 70,
   forn_freteRapido: 5, forn_freteEconomico: 2,
@@ -138,15 +147,27 @@ window.onload = () => {
     diaAtual = st.dia||0;
     jogoIniciado = st.iniciado||false;
     const novaPartida = st.partidaId || null;
+    codigoPartida = st.codigo || null;   // 🔑 NOVO
 
-    if(minhaEquipe && novaPartida && novaPartida !== partidaIdAtual){
+    // 🔑 Se a partida mudou, invalida o código já digitado e volta para o início
+    if(novaPartida && novaPartida !== partidaIdAtual){
       partidaIdAtual = novaPartida;
       localStorage.setItem("partidaId", novaPartida);
-      voltarParaSelecao();
-      return;
+
+      // valida se o código salvo localmente corresponde à partida atual
+      const salvoCod = localStorage.getItem("codigoOk");
+      codigoOk = (salvoCod && salvoCod === codigoPartida);
+
+      if(minhaEquipe){
+        voltarParaSelecao();
+        return;
+      }
+    } else {
+      partidaIdAtual = novaPartida;
+      localStorage.setItem("partidaId", novaPartida);
+      const salvoCod = localStorage.getItem("codigoOk");
+      codigoOk = (salvoCod && salvoCod === codigoPartida);
     }
-    partidaIdAtual = novaPartida;
-    localStorage.setItem("partidaId", novaPartida);
 
     atualizarTela();
   });
@@ -157,30 +178,47 @@ window.onload = () => {
       const st = s.val()||{};
       jogoIniciado = st.iniciado||false;
       diaAtual = st.dia||0;
-      selecionar(salva);
+      codigoPartida = st.codigo || null;
+      const salvoCod = localStorage.getItem("codigoOk");
+      codigoOk = (salvoCod && salvoCod === codigoPartida);
+      if(codigoOk) selecionar(salva);
+      else atualizarTela();
     });
   }
 };
 
 function atualizarTela(){
+  // 🔑 NOVO: antes de tudo, exige o código da partida
+  if(!codigoOk){
+    $("telaCodigo").style.display = "block";
+    $("telaSelecao").style.display = "none";
+    $("telaEspera").style.display = "none";
+    $("telaJogo").style.display = "none";
+    $("overlayFim").style.display = "none";
+    $("avisoCodigo").style.display = jogoIniciado ? "none" : "block";
+    return;
+  }
+
   if(!minhaEquipe){
+    $("telaCodigo").style.display = "none";
     $("telaSelecao").style.display = "block";
     $("telaEspera").style.display = "none";
     $("telaJogo").style.display = "none";
-    $("overlayFim").style.display = "none";   // 🏆 NOVO
-    $("avisoEspera").style.display = jogoIniciado ? "none" : "block";
+    $("overlayFim").style.display = "none";
     return;
   }
 
   if(!jogoIniciado){
+    $("telaCodigo").style.display = "none";
     $("telaSelecao").style.display = "none";
     $("telaEspera").style.display = "block";
     $("telaJogo").style.display = "none";
-    $("overlayFim").style.display = "none";   // 🏆 NOVO
+    $("overlayFim").style.display = "none";
     $("esperaLbl").textContent = "✅ Equipe " + minhaEquipe + " selecionada";
     return;
   }
 
+  $("telaCodigo").style.display = "none";
   $("telaSelecao").style.display = "none";
   $("telaEspera").style.display = "none";
   $("telaJogo").style.display = "block";
@@ -193,16 +231,38 @@ function atualizarTela(){
     $("btnEnviar").className = "enviar";
     $("btnEnviar").textContent = "🏁 PARTIDA ENCERRADA";
     $("status").textContent = "O jogo terminou. Aguarde o professor.";
-    mostrarResultadoFinal();   // 🏆 NOVO
+    mostrarResultadoFinal();
   } else {
-    $("overlayFim").style.display = "none";   // 🏆 NOVO
+    $("overlayFim").style.display = "none";
     $("btnEnviar").disabled = false;
     verificarEnvio();
   }
 }
 
+/* ====== 🔑 VALIDAÇÃO DO CÓDIGO ====== */
+function validarCodigo(){
+  if(!jogoIniciado){
+    alert("⏳ A partida ainda não foi iniciada pelo professor. Aguarde.");
+    return;
+  }
+  const tentativa = ($("inputCodigo").value || "").trim().toUpperCase();
+  if(!tentativa){
+    alert("Digite o código informado pelo professor.");
+    return;
+  }
+  if(tentativa !== codigoPartida){
+    alert("❌ Código inválido. Peça o código correto ao professor.");
+    return;
+  }
+  codigoOk = true;
+  localStorage.setItem("codigoOk", codigoPartida);
+  $("inputCodigo").value = "";
+  atualizarTela();
+}
+
 /* ====== SELEÇÃO DE EQUIPE ====== */
 function selecionar(eq){
+  if(!codigoOk){ atualizarTela(); return; }   // 🔑 trava extra
   minhaEquipe = eq;
   localStorage.setItem("minhaEquipe", eq);
   db.ref("equipes/"+eq+"/ativa").set(true);
@@ -230,7 +290,6 @@ function trocarEquipe(){
 /* ====== LISTENERS DA EQUIPE ====== */
 function iniciarListeners(){
   db.ref("jogo/config").on("value", s=>{
-    // 🔧 mescla (não sobrescreve) para preservar os fretes padrão se não vierem do banco
     CFG = {...CFG, ...(s.val()||{})};
     $("totalDias").textContent = CFG.totalDias||30;
     atualizarInfoFrete();
@@ -253,7 +312,6 @@ function iniciarListeners(){
 function atualizarInfoFrete(){
   if(!CFG.forn_leadRapido) return;
 
-  // ----- Fornecedor → CD -----
   const rapF   = $("seletorFreteForn").value === "rapido";
   const leadF  = rapF ? CFG.forn_leadRapido  : CFG.forn_leadEconomico;
   const freteF = rapF ? CFG.forn_freteRapido : CFG.forn_freteEconomico;
@@ -261,7 +319,6 @@ function atualizarInfoFrete(){
     `Lead time: <b>${leadF} dias</b> · ` +
     `Frete: <b>R$ ${freteF}/un</b>`;
 
-  // ----- CD → Loja -----
   const rapL   = $("seletorFreteLoja").value === "rapido";
   const leadL  = rapL ? CFG.loja_leadRapido  : CFG.loja_leadEconomico;
   const freteL = rapL ? CFG.loja_freteRapido : CFG.loja_freteEconomico;
@@ -304,7 +361,6 @@ function enviarDecisao(){
   db.ref("decisoes/dia"+diaAtual+"/"+minhaEquipe).set(decisao).then(()=>{
     $("status").textContent = "✅ Decisão enviada com sucesso!";
 
-    // 🧹 LIMPAR CAMPOS APÓS ENVIAR
     $("pedido").value = 0;
     $("r1").value = 0;
     $("r2").value = 0;
@@ -317,9 +373,8 @@ function enviarDecisao(){
   });
 }
 
-/* ====== 🏆 RESULTADO FINAL (MODAL CENTRALIZADO) ====== */
+/* ====== 🏆 RESULTADO FINAL ====== */
 function mostrarResultadoFinal(){
-  // Lê o lucro de todas as equipes e descobre a vencedora
   db.ref("equipes").once("value").then(s=>{
     const equipes = s.val() || {};
     let vencedora = null;
@@ -337,7 +392,7 @@ function mostrarResultadoFinal(){
     });
 
     const banner = $("bannerFim");
-    $("overlayFim").style.display = "flex";   // 🏆 mostra centralizado
+    $("overlayFim").style.display = "flex";
 
     const meuLucro = (equipes[minhaEquipe]?.lucro || 0).toFixed(0);
 
