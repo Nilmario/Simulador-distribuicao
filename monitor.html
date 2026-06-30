@@ -21,6 +21,10 @@
   .ajuda{background:#f39c12;color:#fff;}
   button:disabled{background:#999;cursor:not-allowed;}
 
+  /* 🔑 NOVO: badge do código da partida */
+  .codigoBox{background:#102a43;color:#fff;border-radius:10px;padding:8px 16px;font-size:15px;font-weight:bold;display:none;align-items:center;gap:8px;}
+  .codigoBox .cod{font-size:22px;letter-spacing:3px;color:#f9d423;background:rgba(255,255,255,.1);padding:2px 10px;border-radius:6px;}
+
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:1500px;margin:0 auto;}
   .equipe{background:#fff;border-radius:14px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;}
   .eqHead{text-align:center;font-weight:bold;color:#fff;padding:8px;border-radius:8px;margin-bottom:8px;font-size:16px;}
@@ -35,7 +39,6 @@
   .estoqueCD{font-size:26px;font-weight:bold;color:#1a3c5e;}
   .estoqueCD small{display:block;font-size:12px;color:#789;font-weight:normal;}
 
-  /* ===== ESTRADA Forn→CD ===== */
   .estradaWrap{flex:0 0 120px;width:120px;min-width:120px;}
   .estrada{position:relative;height:22px;background:#37474f;border-radius:5px;
     margin-top:22px;
@@ -46,7 +49,6 @@
     transform:scaleX(-1);transition:left .8s ease;}
   .estrada.parada .caminhao{opacity:.25;}
 
-  /* ===== ESTRADA CD→Loja ===== */
   .estradaLoja{position:relative;height:26px;background:#37474f;border-radius:6px;flex:1;min-width:100px;
     margin-top:24px;
     background-image:repeating-linear-gradient(90deg,transparent 0 14px,#ffca28 14px 28px);
@@ -58,7 +60,6 @@
   .lojaEstradaCol{display:flex;flex-direction:column;align-items:stretch;min-width:105px;}
   .transLojaLabel{text-align:center;font-size:12px;color:#1a3c5e;margin-top:3px;white-space:nowrap;font-weight:bold;}
 
-  /* ===== AVISO DE CHEGADA DA CARGA ===== */
   .chegaInfo{font-size:11px;font-weight:bold;margin-top:2px;text-align:center;white-space:nowrap;}
   .chegaInfo.viajando{color:#c0392b;}
   .chegaInfo.chegahoje{color:#2e7d4f;}
@@ -72,7 +73,6 @@
   .lojaInfo span{color:#789;font-size:15px;}
   .falta{color:#c0392b !important;font-weight:bold;}
 
-  /* ===== DEMANDA EM DESTAQUE ===== */
   .demandaBadge{
     display:inline-flex;align-items:center;gap:4px;
     background:#fff3cd;color:#856404;
@@ -108,13 +108,11 @@
   .row input{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;}
   .modalBtns{display:flex;gap:10px;margin-top:18px;}
 
-  /* ===== CONFETES ===== */
   #confeteCanvas{
     position:fixed;inset:0;width:100%;height:100%;
     pointer-events:none;z-index:9000;display:none;
   }
 
-  /* ===== RANKING + PÓDIO F1 ===== */
   .rankBox{display:none;max-width:760px;margin:0 auto 20px;background:linear-gradient(160deg,#0f1f33,#1a3c5e);
     border-radius:18px;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,.35);color:#fff;}
   .rankBox h2{text-align:center;color:#f9d423;margin:0 0 6px;font-size:30px;letter-spacing:1px;
@@ -173,6 +171,7 @@
 <h1>📦 Simulador de Cadeia de Suprimentos</h1>
 <div class="topbar">
   <span class="dia">DIA <span id="diaAtual">0</span> / <span id="totalDias">30</span></span>
+  <span id="codigoBox" class="codigoBox">🔑 Código: <span id="codigoPartida" class="cod">—</span></span>
   <button id="btnIniciar" class="iniciar" onclick="iniciarJogo()">▶️ INICIAR (Dia 0)</button>
   <button id="btnAvancar" class="avancar" onclick="avancarDia()" disabled>⏭️ AVANÇAR DIA</button>
   <button onclick="abrirOpcoes()" class="opt">⚙️ OPÇÕES</button>
@@ -240,7 +239,8 @@
     <h3>👨‍🏫 Como o professor conduz</h3>
     <ul>
       <li><b>⚙️ Opções:</b> configure custos, lead times, demanda e total de dias antes de começar.</li>
-      <li><b>▶️ Iniciar (Dia 0):</b> zera as equipes e libera a entrada dos alunos.</li>
+      <li><b>▶️ Iniciar (Dia 0):</b> zera as equipes, gera o <b>🔑 código da partida</b> e libera a entrada dos alunos.</li>
+      <li><b>Passe o código</b> que aparece no topo para os alunos digitarem no celular.</li>
       <li>Confira no monitor se <b>todas as equipes apareceram</b> (A, B, C, D).</li>
       <li><b>⏭️ Avançar Dia:</b> só clique quando todas as equipes enviarem a decisão.</li>
       <li>No último dia, o <b>🏆 Pódio Final</b> aparece automaticamente.</li>
@@ -249,8 +249,8 @@
 
     <h3>📱 Como os alunos jogam</h3>
     <ul>
-      <li>Leem o <b>QR Code</b>, abrem no celular e escolhem a equipe.</li>
-      <li>Aguardam o professor iniciar a partida.</li>
+      <li>Leem o <b>QR Code</b>, abrem no celular e <b>digitam o código da partida</b>.</li>
+      <li>Escolhem a equipe e aguardam o professor iniciar.</li>
       <li>A cada dia decidem <b>quanto comprar (Forn→CD)</b> e <b>como distribuir (CD→Lojas)</b>.</li>
       <li>Tocam em <b>✅ ENVIAR DECISÃO</b> (podem reenviar até o dia avançar).</li>
     </ul>
@@ -354,7 +354,6 @@ function melhorProgressoLoja(chegadasLoja, loja, lead, dia){
   return achou ? melhor : -1;
 }
 
-/* ===== Helpers: dias até a PRÓXIMA chegada ===== */
 function proximaChegadaCD(chegadasCD){
   let menor = null;
   for(const k in chegadasCD){
@@ -397,6 +396,15 @@ window.onload = () => {
     $("diaAtual").textContent = diaAtual;
     $("btnIniciar").disabled = jogoIniciado;
     $("btnAvancar").disabled = !jogoIniciado || diaAtual>=CFG.totalDias;
+
+    // 🔑 NOVO: mostra/esconde o código da partida
+    if(jogoIniciado && st.codigo){
+      $("codigoPartida").textContent = st.codigo;
+      $("codigoBox").style.display = "inline-flex";
+    } else {
+      $("codigoBox").style.display = "none";
+    }
+
     atualizarRanking();
     render({val:()=>ultimasEquipes});
   });
@@ -520,7 +528,6 @@ function render(snap){
   });
 }
 
-
 /* ====== RANKING FINAL + PÓDIO F1 ====== */
 let confeteJaDisparado = false;
 
@@ -528,7 +535,7 @@ function atualizarRanking(){
   const box = $("rankBox");
   if(!jogoIniciado || diaAtual < CFG.totalDias){
     box.style.display="none";
-    confeteJaDisparado = false;   // reseta para a próxima partida
+    confeteJaDisparado = false;
     pararConfete();
     return;
   }
@@ -569,10 +576,9 @@ function atualizarRanking(){
 
   box.style.display = "block";
 
-  // dispara os confetes apenas uma vez quando o pódio aparece
   if(!confeteJaDisparado && lista.length > 0){
     confeteJaDisparado = true;
-    lancarConfete(8000); // chuva intensa por 8 segundos
+    lancarConfete(8000);
   }
 }
 
@@ -617,13 +623,12 @@ function lancarConfete(duracaoMs){
       p.x += p.vx;
       p.rot += p.vrot;
 
-      // recicla as peças enquanto estiver gerando
       if(p.y > canvas.height + 20){
         if(aindaGerando){
           p.y = -20;
           p.x = Math.random()*canvas.width;
         } else {
-          return; // deixa cair e some
+          return;
         }
       }
       visiveis++;
@@ -675,7 +680,11 @@ function iniciarJogo(){
   });
   db.ref("equipes").set(base);
   db.ref("decisoes").remove();
-  db.ref("jogo/estado").set({dia:0, iniciado:true, partidaId: Date.now()});
+
+  // 🔑 NOVO: gera código curto único da partida
+  const codigo = Math.random().toString(36).slice(2,7).toUpperCase();
+  db.ref("jogo/estado").set({dia:0, iniciado:true, partidaId: Date.now(), codigo});
+  alert("🔑 Código desta partida: " + codigo + "\n\nPasse este código para os alunos digitarem no celular!");
 }
 
 async function avancarDia(){
@@ -775,7 +784,6 @@ async function avancarDia(){
   await db.ref("jogo/estado").update({dia:novoDia});
 
   if(novoDia >= CFG.totalDias){
-    // confetes e pódio já aparecem na tela — deixa todos curtirem os campeões 🎉
     setTimeout(async () => {
       const limpar = confirm(
         "🏁 Partida encerrada! Curtiram o pódio? 🏆\n\n" +
@@ -796,10 +804,9 @@ async function avancarDia(){
         });
         alert("✅ Dados limpos! Pronto para uma nova partida.");
       }
-    }, 12000); // ⏳ 12 segundos para apreciar os campeões e os confetes
+    }, 12000);
   }
 }
-
 
 function resetar(){
   if(!confirm("Reiniciar todo o jogo? Isso apaga todos os dados.")) return;
@@ -839,11 +846,9 @@ function salvarOpcoes(){
 
 function fecharOpcoes(){ $("overlay").style.display="none"; }
 
-/* ====== ❓ MODAL DE INSTRUÇÕES (COMO JOGAR) ====== */
 function abrirAjuda(){ $("overlayAjuda").style.display="flex"; }
 function fecharAjuda(){ $("overlayAjuda").style.display="none"; }
 
-/* ====== 📲 QR CODE RECOLHÍVEL ====== */
 function toggleQR(){ $("qrBox").classList.toggle("open"); }
 </script>
 </body>
