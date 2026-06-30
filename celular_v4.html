@@ -30,8 +30,10 @@
   .estoqueInfo b{display:block;font-size:18px;}
   #status{text-align:center;font-size:13px;color:#2e7d4f;font-weight:bold;margin-top:8px;}
   .aviso{text-align:center;background:#fff3cd;color:#856404;border-radius:8px;padding:10px;font-size:13px;margin-bottom:12px;}
-  /* 🔑 NOVO: campo de código */
   .codigoInput{font-size:22px !important;text-align:center;letter-spacing:4px;text-transform:uppercase;font-weight:bold;color:#102a43;}
+  #reconectando{position:fixed;inset:0;background:rgba(26,60,94,.92);color:#fff;z-index:9998;display:none;align-items:center;justify-content:center;flex-direction:column;font-size:18px;font-weight:bold;}
+  #reconectando .spin{font-size:46px;margin-bottom:14px;animation:girar 1s linear infinite;}
+  @keyframes girar{to{transform:rotate(360deg);}}
   @keyframes popFim{
     from{transform:scale(.7);opacity:0;}
     to{transform:scale(1);opacity:1;}
@@ -41,11 +43,12 @@
 <body>
 <h1>📦 Painel da Equipe</h1>
 
+<div id="reconectando"><div class="spin">🔄</div>Reconectando à sua equipe...</div>
+
 <div id="overlayFim" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px;">
   <div id="bannerFim" style="text-align:center;border-radius:18px;padding:30px 22px;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:340px;width:100%;animation:popFim .3s ease;"></div>
 </div>
 
-<!-- 🔑 NOVO: tela de código de acesso -->
 <div id="telaCodigo" class="selEquipe" style="display:none">
   <h2>🔑 Código da Partida</h2>
   <div id="avisoCodigo" class="aviso" style="display:none">⏳ Aguardando o professor iniciar a partida...</div>
@@ -56,10 +59,10 @@
 
 <div id="telaSelecao" class="selEquipe" style="display:none">
   <h2>Escolha sua equipe</h2>
-  <button class="enviar" onclick="selecionar('A')">🟢 Equipe A</button>
-  <button style="background:#1a3c5e" onclick="selecionar('B')">🔵 Equipe B</button>
-  <button style="background:#8e44ad" onclick="selecionar('C')">🟣 Equipe C</button>
-  <button style="background:#d35400" onclick="selecionar('D')">🟠 Equipe D</button>
+  <button class="enviar" data-eq="A" onclick="selecionar('A')">🟢 Equipe A</button>
+  <button style="background:#1a3c5e" data-eq="B" onclick="selecionar('B')">🔵 Equipe B</button>
+  <button style="background:#8e44ad" data-eq="C" onclick="selecionar('C')">🟣 Equipe C</button>
+  <button style="background:#d35400" data-eq="D" onclick="selecionar('D')">🟠 Equipe D</button>
 </div>
 
 <div id="telaEspera" class="selEquipe" style="display:none">
@@ -127,8 +130,18 @@ let minhaEquipe = null;
 let diaAtual = 0;
 let jogoIniciado = false;
 let jogoEncerrado = false;
-let codigoPartida = null;   // 🔑 NOVO: código atual da partida (vem do Firebase)
-let codigoOk = false;       // 🔑 NOVO: aluno já validou o código?
+let codigoPartida = null;
+let codigoOk = false;
+
+const TIMEOUT_INATIVIDADE = 3 * 60 * 1000; // 3 minutos
+let heartbeatInterval = null;
+
+// ID único deste celular
+let meuDeviceId = localStorage.getItem("deviceId");
+if(!meuDeviceId){
+  meuDeviceId = "dev_" + Date.now() + "_" + Math.random().toString(36).slice(2,8);
+  localStorage.setItem("deviceId", meuDeviceId);
+}
 
 let CFG = {
   custoCompra: 70,
@@ -147,17 +160,13 @@ window.onload = () => {
     diaAtual = st.dia||0;
     jogoIniciado = st.iniciado||false;
     const novaPartida = st.partidaId || null;
-    codigoPartida = st.codigo || null;   // 🔑 NOVO
+    codigoPartida = st.codigo || null;
 
-    // 🔑 Se a partida mudou, invalida o código já digitado e volta para o início
     if(novaPartida && novaPartida !== partidaIdAtual){
       partidaIdAtual = novaPartida;
       localStorage.setItem("partidaId", novaPartida);
-
-      // valida se o código salvo localmente corresponde à partida atual
       const salvoCod = localStorage.getItem("codigoOk");
       codigoOk = (salvoCod && salvoCod === codigoPartida);
-
       if(minhaEquipe){
         voltarParaSelecao();
         return;
@@ -169,26 +178,58 @@ window.onload = () => {
       codigoOk = (salvoCod && salvoCod === codigoPartida);
     }
 
+    // Reconexão automática à equipe salva
+    if(codigoOk && !minhaEquipe){
+      const eqSalva = localStorage.getItem("minhaEquipe");
+      if(eqSalva){ tentarReconectar(eqSalva); return; }
+    }
+
     atualizarTela();
   });
 
-  const salva = localStorage.getItem("minhaEquipe");
-  if(salva){
-    db.ref("jogo/estado").once("value").then(s=>{
-      const st = s.val()||{};
-      jogoIniciado = st.iniciado||false;
-      diaAtual = st.dia||0;
-      codigoPartida = st.codigo || null;
-      const salvoCod = localStorage.getItem("codigoOk");
-      codigoOk = (salvoCod && salvoCod === codigoPartida);
-      if(codigoOk) selecionar(salva);
-      else atualizarTela();
-    });
-  }
+  // Observa ocupação das equipes para travar botões
+  db.ref("equipes").on("value", s=>{
+    atualizarBotoesEquipe(s.val() || {});
+  });
 };
 
+/* ====== RECONEXÃO ====== */
+function tentarReconectar(eq){
+  $("reconectando").style.display = "flex";
+  db.ref("equipes/"+eq).once("value").then(s=>{
+    const e = s.val() || {};
+    if(e.donoId === meuDeviceId){
+      minhaEquipe = eq;
+      registrarPresenca(eq);
+      iniciarListeners();
+      $("reconectando").style.display = "none";
+      atualizarTela();
+    } else {
+      localStorage.removeItem("minhaEquipe");
+      minhaEquipe = null;
+      $("reconectando").style.display = "none";
+      atualizarTela();
+    }
+  });
+}
+
+/* ====== PRESENÇA / HEARTBEAT ====== */
+function registrarPresenca(eq){
+  const ref = db.ref("equipes/"+eq);
+  ref.child("ocupada").onDisconnect().set(false);
+  ref.child("donoId").onDisconnect().set(null);
+  ref.child("ativa").onDisconnect().set(false);
+
+  ref.child("ultimoHeartbeat").set(Date.now());
+  if(heartbeatInterval) clearInterval(heartbeatInterval);
+  heartbeatInterval = setInterval(()=>{
+    if(minhaEquipe === eq){
+      ref.child("ultimoHeartbeat").set(Date.now());
+    }
+  }, 30000);
+}
+
 function atualizarTela(){
-  // 🔑 NOVO: antes de tudo, exige o código da partida
   if(!codigoOk){
     $("telaCodigo").style.display = "block";
     $("telaSelecao").style.display = "none";
@@ -239,17 +280,14 @@ function atualizarTela(){
   }
 }
 
-/* ====== 🔑 VALIDAÇÃO DO CÓDIGO ====== */
+/* ====== VALIDAÇÃO DO CÓDIGO ====== */
 function validarCodigo(){
   if(!jogoIniciado){
     alert("⏳ A partida ainda não foi iniciada pelo professor. Aguarde.");
     return;
   }
   const tentativa = ($("inputCodigo").value || "").trim().toUpperCase();
-  if(!tentativa){
-    alert("Digite o código informado pelo professor.");
-    return;
-  }
+  if(!tentativa){ alert("Digite o código informado pelo professor."); return; }
   if(tentativa !== codigoPartida){
     alert("❌ Código inválido. Peça o código correto ao professor.");
     return;
@@ -260,22 +298,79 @@ function validarCodigo(){
   atualizarTela();
 }
 
+/* ====== BOTÕES DE EQUIPE ====== */
+function atualizarBotoesEquipe(equipes){
+  ["A","B","C","D"].forEach(id=>{
+    const btn = document.querySelector(`#telaSelecao button[data-eq="${id}"]`);
+    if(!btn) return;
+    const e = equipes[id] || {};
+    const inativo = !e.ultimoHeartbeat ||
+                    (Date.now() - e.ultimoHeartbeat) > TIMEOUT_INATIVIDADE;
+    const ocupadaPorOutro = e.ocupada && e.donoId &&
+                            e.donoId !== meuDeviceId && !inativo;
+
+    if(ocupadaPorOutro){
+      btn.disabled = true;
+      btn.style.opacity = "0.45";
+      if(!btn.dataset.txtOriginal) btn.dataset.txtOriginal = btn.textContent;
+      btn.textContent = btn.dataset.txtOriginal + " 🔒 (ocupada)";
+    } else {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      if(btn.dataset.txtOriginal) btn.textContent = btn.dataset.txtOriginal;
+    }
+  });
+}
+
 /* ====== SELEÇÃO DE EQUIPE ====== */
 function selecionar(eq){
-  if(!codigoOk){ atualizarTela(); return; }   // 🔑 trava extra
-  minhaEquipe = eq;
-  localStorage.setItem("minhaEquipe", eq);
-  db.ref("equipes/"+eq+"/ativa").set(true);
-  iniciarListeners();
-  atualizarTela();
+  if(!codigoOk){ atualizarTela(); return; }
+
+  const ref = db.ref("equipes/"+eq);
+  ref.transaction(atual=>{
+    atual = atual || {};
+    if(atual.ocupada && atual.donoId && atual.donoId !== meuDeviceId){
+      const inativo = !atual.ultimoHeartbeat ||
+                      (Date.now() - atual.ultimoHeartbeat) > TIMEOUT_INATIVIDADE;
+      if(!inativo) return; // tem dono ativo -> aborta
+    }
+    atual.ocupada = true;
+    atual.donoId = meuDeviceId;
+    atual.ativa = true;
+    atual.ultimoHeartbeat = Date.now();
+    return atual;
+  }, (err, commited)=>{
+    if(err){ alert("Erro ao entrar na equipe. Tente de novo."); return; }
+    if(!commited){
+      alert("🔒 Essa equipe já foi escolhida por outro grupo. Escolha outra!");
+      return;
+    }
+    minhaEquipe = eq;
+    localStorage.setItem("minhaEquipe", eq);
+    registrarPresenca(eq);
+    iniciarListeners();
+    atualizarTela();
+  });
 }
 
 function voltarParaSelecao(){
   if(minhaEquipe){
-    db.ref("equipes/"+minhaEquipe+"/ativa").set(false);
+    const ref = db.ref("equipes/"+minhaEquipe);
+    ref.transaction(atual=>{
+      atual = atual || {};
+      if(atual.donoId === meuDeviceId){
+        atual.ocupada = false;
+        atual.donoId = null;
+        atual.ativa = false;
+        atual.ultimoHeartbeat = null;
+      }
+      return atual;
+    });
+    ref.onDisconnect().cancel();
     db.ref("jogo/config").off();
-    db.ref("equipes/"+minhaEquipe).off();
+    ref.off();
   }
+  if(heartbeatInterval){ clearInterval(heartbeatInterval); heartbeatInterval = null; }
   minhaEquipe = null;
   jogoEncerrado = false;
   localStorage.removeItem("minhaEquipe");
@@ -316,15 +411,13 @@ function atualizarInfoFrete(){
   const leadF  = rapF ? CFG.forn_leadRapido  : CFG.forn_leadEconomico;
   const freteF = rapF ? CFG.forn_freteRapido : CFG.forn_freteEconomico;
   $("infoForn").innerHTML =
-    `Lead time: <b>${leadF} dias</b> · ` +
-    `Frete: <b>R$ ${freteF}/un</b>`;
+    `Lead time: <b>${leadF} dias</b> · Frete: <b>R$ ${freteF}/un</b>`;
 
   const rapL   = $("seletorFreteLoja").value === "rapido";
   const leadL  = rapL ? CFG.loja_leadRapido  : CFG.loja_leadEconomico;
   const freteL = rapL ? CFG.loja_freteRapido : CFG.loja_freteEconomico;
   $("infoLoja").innerHTML =
-    `Lead time: <b>${leadL} dias</b> · ` +
-    `Frete: <b>R$ ${freteL}/un</b>`;
+    `Lead time: <b>${leadL} dias</b> · Frete: <b>R$ ${freteL}/un</b>`;
 }
 
 /* ====== VERIFICAR SE JÁ ENVIOU ====== */
@@ -360,7 +453,6 @@ function enviarDecisao(){
   };
   db.ref("decisoes/dia"+diaAtual+"/"+minhaEquipe).set(decisao).then(()=>{
     $("status").textContent = "✅ Decisão enviada com sucesso!";
-
     $("pedido").value = 0;
     $("r1").value = 0;
     $("r2").value = 0;
@@ -368,12 +460,11 @@ function enviarDecisao(){
     $("seletorFreteForn").value = "economico";
     $("seletorFreteLoja").value = "economico";
     atualizarInfoFrete();
-
     verificarEnvio();
   });
 }
 
-/* ====== 🏆 RESULTADO FINAL ====== */
+/* ====== RESULTADO FINAL ====== */
 function mostrarResultadoFinal(){
   db.ref("equipes").once("value").then(s=>{
     const equipes = s.val() || {};
@@ -384,16 +475,12 @@ function mostrarResultadoFinal(){
       const e = equipes[id] || {};
       if(e.ativa){
         const lucro = e.lucro || 0;
-        if(lucro > melhorLucro){
-          melhorLucro = lucro;
-          vencedora = id;
-        }
+        if(lucro > melhorLucro){ melhorLucro = lucro; vencedora = id; }
       }
     });
 
     const banner = $("bannerFim");
     $("overlayFim").style.display = "flex";
-
     const meuLucro = (equipes[minhaEquipe]?.lucro || 0).toFixed(0);
 
     if(vencedora === minhaEquipe){
